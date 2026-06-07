@@ -2,46 +2,73 @@ package com.wearworeworn
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
-import com.wearworeworn.ui.theme.WearworewornTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.wearworeworn.ui.screens.HomeScreen
+import com.wearworeworn.ui.screens.ProductDetailScreen
+import com.wearworeworn.viewmodel.ProductViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        
+        // Change Status Bar to Black
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(
+                Color.Black.toArgb()
+            )
+        )
+        
         setContent {
-            WearworewornTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MaterialTheme {
+                Surface {
+                    val navController = rememberNavController()
+                    val productViewModel: ProductViewModel = viewModel()
+
+                    NavHost(navController = navController, startDestination = "home") {
+                        composable("home") {
+                            HomeScreen(
+                                viewModel = productViewModel,
+                                onProductClick = { productId ->
+                                    navController.navigate("productDetail/$productId")
+                                }
+                            )
+                        }
+                        composable(
+                            route = "productDetail/{productId}",
+                            arguments = listOf(navArgument("productId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val productId = backStackEntry.arguments?.getInt("productId") ?: 0
+                            ProductDetailScreen(
+                                productId = productId,
+                                viewModel = productViewModel,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    WearworewornTheme {
-        Greeting("Android")
+fun MainPreview() {
+    MaterialTheme {
+        // Preview
     }
 }
