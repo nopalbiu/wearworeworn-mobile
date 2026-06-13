@@ -33,7 +33,6 @@ fun ProductCard(product: Product, onClick: () -> Unit) {
             )
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(text = product.name, style = MaterialTheme.typography.titleMedium)
-                // Menggunakan Formatter Rupiah
                 Text(text = Formatter.formatRupiah(product.price), style = MaterialTheme.typography.bodyMedium)
             }
         }

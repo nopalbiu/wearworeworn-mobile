@@ -25,18 +25,18 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
     private val _orderSuccess = mutableStateOf<Order?>(null)
     val orderSuccess: State<Order?> = _orderSuccess
 
-    // ─── Create Order (Checkout) ──────────────────────────────────────────────
-
     fun createOrder(
         recipientName:   String,
         shippingAddress: String,
         phone:           String,
         note:            String,
+        courier:         String,
+        paymentMethod:   String,
         onSuccess:       (Order) -> Unit,
         onError:         (String) -> Unit
     ) {
-        if (recipientName.isBlank() || shippingAddress.isBlank() || phone.isBlank()) {
-            onError("Nama, alamat, dan nomor HP harus diisi.")
+        if (recipientName.isBlank() || shippingAddress.isBlank() || phone.isBlank() || courier.isBlank() || paymentMethod.isBlank()) {
+            onError("Semua field harus diisi.")
             return
         }
         val token = sessionManager.bearerToken() ?: run {
@@ -53,7 +53,9 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
                         recipientName   = recipientName.trim(),
                         shippingAddress = shippingAddress.trim(),
                         phone           = phone.trim(),
-                        note            = note.trim()
+                        note            = note.trim(),
+                        courier         = courier,
+                        paymentMethod   = paymentMethod
                     )
                 )
                 _orderSuccess.value = response.order

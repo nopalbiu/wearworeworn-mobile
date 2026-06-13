@@ -6,8 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.wearworeworn.model.AddToCartRequest
-import com.wearworeworn.model.CartItem
+import com.wearworeworn.model.*
 import com.wearworeworn.network.RetrofitClient
 import com.wearworeworn.util.SessionManager
 import kotlinx.coroutines.launch
@@ -31,67 +30,100 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     val totalPrice: Double get() = _cartItems.value.sumOf { it.subtotal }
     val totalItems: Int    get() = _cartItems.value.sumOf { it.quantity }
 
-    // ─── Load Cart ────────────────────────────────────────────────────────────
-
     fun loadCart() {
         val token = sessionManager.bearerToken() ?: return
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _cartItems.value = RetrofitClient.instance.getCart(token)
+                val serverItems = RetrofitClient.instance.getCart(token)
+                _cartItems.value = serverItems
             } catch (e: Exception) {
                 Log.e("CART", "Load error: ${e.message}")
-                _errorMessage.value = "Gagal memuat keranjang. Periksa koneksi."
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    // ─── Add to Cart ──────────────────────────────────────────────────────────
+    fun addToCart(variantId: Int, quantity: Int, product: Product, variant: ProductVariant, onSuccess: () -> Unit, onError: () -> Unit) {
+        val token = sessionManager.bearerToken()
+        
+        val currentItems = _cartItems.value.toMutableList()
+        val existingIndex = currentItems.indexOfFirst { it.variant.id == variantId }
+        
+        if (existingIndex != -1) {
+            val item = currentItems[existingIndex]
+            currentItems[existingIndex] = item.copy(quantity = item.quantity + quantity)
+        } else {
+            currentItems.add(CartItem(
+                id = -(100..9999).random(),
+                product = product,
+                variant = variant,
+                quantity = quantity
+            ))
+        }
+        _cartItems.value = currentItems
+        _successMessage.value = "Ditambahkan ke keranjang"
+        onSuccess()
 
-    fun addToCart(variantId: Int, quantity: Int, onSuccess: () -> Unit, onError: () -> Unit) {
-        val token = sessionManager.bearerToken() ?: run { onError(); return }
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                RetrofitClient.instance.addToCart(token, AddToCartRequest(variantId, quantity))
-                loadCart()
-                _successMessage.value = "Produk berhasil ditambahkan ke keranjang!"
-                onSuccess()
-            } catch (e: Exception) {
-                Log.e("CART", "Add error: ${e.message}")
-                _errorMessage.value = "Gagal menambahkan ke keranjang."
-                onError()
-            } finally {
-                _isLoading.value = false
+        if (token != null) {
+            viewModelScope.launch {
+                try {
+                    RetrofitClient.instance.addToCart(token, AddToCartRequest(variantId, quantity))
+                } catch (e: Exception) {
+                    Log.e("CART", "Sync error: ${e.message}")
+                }
             }
         }
     }
 
-    // ─── Remove Item ──────────────────────────────────────────────────────────
+    fun updateQuantity(cartItemId: Int, newQuantity: Int) {
+        if (newQuantity < 1) return
+        
+        _cartItems.value = _cartItems.value.map {
+            if (it.id == cartItemId) it.copy(quantity = newQuantity) else it
+        }
+
+        if (cartItemId > 0) {
+            val token = sessionManager.bearerToken() ?: return
+            viewModelScope.launch {
+                try {
+                    RetrofitClient.instance.updateCartItem(token, cartItemId, UpdateCartRequest(newQuantity))
+                } catch (e: Exception) {
+                    Log.e("CART", "Update error: ${e.message}")
+                }
+            }
+        }
+    }
 
     fun removeFromCart(cartItemId: Int) {
-        val token = sessionManager.bearerToken() ?: return
-        viewModelScope.launch {
-            try {
-                RetrofitClient.instance.deleteCartItem(token, cartItemId)
-                // Optimistic update — hapus dari state lokal
-                _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
-            } catch (e: Exception) {
-                Log.e("CART", "Remove error: ${e.message}")
-                _errorMessage.value = "Gagal menghapus item."
+        _cartItems.value = _cartItems.value.filter { it.id != cartItemId }
+
+        if (cartItemId > 0) {
+            val token = sessionManager.bearerToken() ?: return
+            viewModelScope.launch {
+                try {
+                    RetrofitClient.instance.deleteCartItem(token, cartItemId)
+                } catch (e: Exception) {
+                    Log.e("CART", "Remove error: ${e.message}")
+                }
             }
         }
     }
 
-    // ─── Clear cart after checkout ────────────────────────────────────────────
+    fun prepareDirectPurchase(product: Product, variant: ProductVariant, quantity: Int) {
+        val directItem = CartItem(
+            id = -1,
+            product = product,
+            variant = variant,
+            quantity = quantity
+        )
+        _cartItems.value = listOf(directItem)
+    }
 
     fun clearLocalCart() {
         _cartItems.value = emptyList()
     }
-
-    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     fun clearMessages() {
         _errorMessage.value  = null

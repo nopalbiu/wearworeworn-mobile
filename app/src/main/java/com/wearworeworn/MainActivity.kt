@@ -46,13 +46,11 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController    = rememberNavController()
 
-    // ── ViewModels (hoisted at app level, shared across screens) ──────────────
     val productViewModel: ProductViewModel = viewModel()
     val authViewModel:    AuthViewModel    = viewModel()
     val cartViewModel:    CartViewModel    = viewModel()
     val orderViewModel:   OrderViewModel   = viewModel()
 
-    // Load cart when user logs in
     LaunchedEffect(authViewModel.isLoggedIn.value) {
         if (authViewModel.isLoggedIn.value) {
             cartViewModel.loadCart()
@@ -61,10 +59,9 @@ fun AppNavigation() {
 
     NavHost(
         navController  = navController,
-        startDestination = "home"   // Selalu mulai dari Home (guest dibolehkan lihat katalog)
+        startDestination = "home"
     ) {
 
-        // ── Home ──────────────────────────────────────────────────────────────
         composable("home") {
             HomeScreen(
                 viewModel           = productViewModel,
@@ -77,7 +74,6 @@ fun AppNavigation() {
             )
         }
 
-        // ── Product Detail ────────────────────────────────────────────────────
         composable(
             route     = "productDetail/{productId}",
             arguments = listOf(navArgument("productId") { type = NavType.IntType })
@@ -90,6 +86,7 @@ fun AppNavigation() {
                 cartViewModel       = cartViewModel,
                 onBack              = { navController.popBackStack() },
                 onNavigateToCart    = { navController.navigate("cart") },
+                onNavigateToCheckout = { navController.navigate("checkout") },
                 onNavigateToProfile = {
                     if (authViewModel.isLoggedIn.value) navController.navigate("profile")
                     else navController.navigate("login")
@@ -98,24 +95,20 @@ fun AppNavigation() {
             )
         }
 
-        // ── Login ─────────────────────────────────────────────────────────────
         composable("login") {
             LoginScreen(
                 viewModel            = authViewModel,
                 onLoginSuccess       = {
-                    // Setelah login / lanjut sebagai guest, kembali ke sebelumnya
                     navController.popBackStack()
                 },
                 onNavigateToRegister = { navController.navigate("register") }
             )
         }
 
-        // ── Register ──────────────────────────────────────────────────────────
         composable("register") {
             RegisterScreen(
                 viewModel          = authViewModel,
                 onRegisterSuccess  = {
-                    // Setelah daftar, kembali ke Home
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }
                     }
@@ -124,7 +117,6 @@ fun AppNavigation() {
             )
         }
 
-        // ── Cart ──────────────────────────────────────────────────────────────
         composable("cart") {
             CartScreen(
                 viewModel  = cartViewModel,
@@ -133,14 +125,32 @@ fun AppNavigation() {
             )
         }
 
-        // ── Checkout ──────────────────────────────────────────────────────────
         composable("checkout") {
             CheckoutScreen(
                 cartViewModel  = cartViewModel,
                 orderViewModel = orderViewModel,
                 onBack         = { navController.popBackStack() },
-                onOrderSuccess = {
-                    // Setelah order berhasil, kembali ke Home dan bersihkan back stack
+                onOrderSuccess = { order ->
+                    navController.navigate("checkoutSuccess/${order.id}/${order.totalPrice}") {
+                        popUpTo("cart") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = "checkoutSuccess/{orderId}/{totalPrice}",
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.IntType },
+                navArgument("totalPrice") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+            val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
+            CheckoutSuccessScreen(
+                orderId = orderId,
+                totalPrice = totalPrice,
+                onBackToHome = {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }
                     }
@@ -148,13 +158,11 @@ fun AppNavigation() {
             )
         }
 
-        // ── Profile ───────────────────────────────────────────────────────────
         composable("profile") {
             ProfileScreen(
                 viewModel = authViewModel,
                 onBack    = { navController.popBackStack() },
                 onLogout  = {
-                    // Setelah logout, ke Home
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }
                     }

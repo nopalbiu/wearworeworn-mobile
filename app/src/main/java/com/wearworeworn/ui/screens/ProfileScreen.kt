@@ -29,14 +29,12 @@ fun ProfileScreen(
     val user = viewModel.currentUser.value
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    // Inisial nama untuk avatar
     val initials = user?.name
         ?.split(" ")
         ?.take(2)
         ?.joinToString("") { it.first().uppercase() }
         ?: "?"
 
-    // ── Logout Confirmation Dialog ─────────────────────────────────────────────
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest   = { showLogoutDialog = false },
@@ -68,7 +66,6 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(Color(0xFFF8F8F8))
     ) {
-        // ── Top Section (gradient) ─────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,7 +75,6 @@ fun ProfileScreen(
                 .statusBarsPadding()
                 .padding(bottom = 40.dp)
         ) {
-            // Back button
             IconButton(
                 onClick  = onBack,
                 modifier = Modifier.padding(8.dp)
@@ -90,7 +86,6 @@ fun ProfileScreen(
                 modifier            = Modifier.fillMaxWidth().padding(top = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Avatar circle with initials
                 Box(
                     modifier         = Modifier
                         .size(90.dp)
@@ -120,7 +115,6 @@ fun ProfileScreen(
             }
         }
 
-        // ── Info Cards ─────────────────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -149,7 +143,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Logout Button ──────────────────────────────────────────────────
             Button(
                 onClick  = { showLogoutDialog = true },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
