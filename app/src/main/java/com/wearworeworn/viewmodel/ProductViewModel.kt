@@ -28,6 +28,9 @@ class ProductViewModel : ViewModel() {
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading
 
+    private val _errorMessage = mutableStateOf<String?>(null)
+    val errorMessage: State<String?> = _errorMessage
+
     // UI States for Filtering/Sorting
     var searchQuery = mutableStateOf("")
     var selectedSortOption = mutableStateOf("SORT BY")
@@ -39,18 +42,24 @@ class ProductViewModel : ViewModel() {
     var selectedPriceRange = mutableStateOf<String?>(null)
 
     init {
+        refreshData()
+    }
+
+    fun refreshData() {
         fetchInitialData()
     }
 
     private fun fetchInitialData() {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
             try {
                 _products.value = RetrofitClient.instance.getProducts()
                 _categories.value = RetrofitClient.instance.getCategories()
                 _sizes.value = RetrofitClient.instance.getSizes()
             } catch (e: Exception) {
                 Log.e("API_ERROR", "Error fetching data: ${e.message}")
+                _errorMessage.value = "Gagal memuat data: ${e.localizedMessage ?: "Cek koneksi internet atau server"}"
             } finally {
                 _isLoading.value = false
             }

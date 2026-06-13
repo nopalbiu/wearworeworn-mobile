@@ -1,4 +1,30 @@
 package com.wearworeworn.model
 
-// File kosong untuk data User
-class User
+import com.google.gson.annotations.SerializedName
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+data class User(
+    @SerializedName("id")    val id:    Int,
+    @SerializedName("name")  val name:  String,
+    @SerializedName("email") val email: String
+)
+
+// ─── Auth Requests & Response ─────────────────────────────────────────────────
+
+data class LoginRequest(
+    @SerializedName("email")    val email:    String,
+    @SerializedName("password") val password: String
+)
+
+data class RegisterRequest(
+    @SerializedName("name")                  val name:                String,
+    @SerializedName("email")                 val email:               String,
+    @SerializedName("password")              val password:            String,
+    @SerializedName("password_confirmation") val passwordConfirmation: String
+)
+
+data class AuthResponse(
+    @SerializedName("token") val token: String,
+    @SerializedName("user")  val user:  User
+)
