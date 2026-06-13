@@ -2,15 +2,11 @@ package com.wearworeworn.model
 
 import com.google.gson.annotations.SerializedName
 
-// ─── User ────────────────────────────────────────────────────────────────────
-
 data class User(
     @SerializedName("id")    val id:    Int,
     @SerializedName("name")  val name:  String,
     @SerializedName("email") val email: String
 )
-
-// ─── Auth Requests & Response ─────────────────────────────────────────────────
 
 data class LoginRequest(
     @SerializedName("email")    val email:    String,

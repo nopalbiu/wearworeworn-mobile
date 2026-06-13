@@ -1,18 +1,16 @@
 package com.wearworeworn.ui.screens
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -26,9 +24,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wearworeworn.model.Order
 import com.wearworeworn.util.Formatter
 import com.wearworeworn.viewmodel.CartViewModel
 import com.wearworeworn.viewmodel.OrderViewModel
@@ -39,7 +37,7 @@ fun CheckoutScreen(
     cartViewModel:  CartViewModel,
     orderViewModel: OrderViewModel,
     onBack:         () -> Unit,
-    onOrderSuccess: () -> Unit
+    onOrderSuccess: (Order) -> Unit
 ) {
     val items      = cartViewModel.cartItems.value
     val total      = cartViewModel.totalPrice
@@ -51,281 +49,263 @@ fun CheckoutScreen(
     var shippingAddress by remember { mutableStateOf("") }
     var phone           by remember { mutableStateOf("") }
     var note            by remember { mutableStateOf("") }
+    
+    val couriers = listOf("JNE", "J&T", "SiCepat")
+    var selectedCourier by remember { mutableStateOf(couriers[0]) }
 
-    var orderPlaced by remember { mutableStateOf(false) }
+    val shippingFee = when (selectedCourier) {
+        "JNE" -> 15000.0
+        "J&T" -> 13000.0
+        "SiCepat" -> 12000.0
+        else -> 0.0
+    }
+
+    val adminFee = when (selectedCourier) {
+        "JNE" -> 3000.0
+        "J&T" -> 2500.0
+        "SiCepat" -> 2000.0
+        else -> 0.0
+    }
+
+    val grandTotal = total + shippingFee + adminFee
+
+    val paymentMethods = listOf("Transfer Bank (Manual)")
+    var selectedPayment by remember { mutableStateOf(paymentMethods[0]) }
 
     LaunchedEffect(Unit) { orderViewModel.resetState() }
 
-    // ─── Success State ────────────────────────────────────────────────────────
-    AnimatedVisibility(
-        visible = orderPlaced,
-        enter   = fadeIn() + scaleIn(),
-        exit    = fadeOut()
-    ) {
-        Box(
-            modifier          = Modifier.fillMaxSize().background(Color.White),
-            contentAlignment  = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier            = Modifier.padding(32.dp)
-            ) {
-                Box(
-                    modifier          = Modifier.size(100.dp).background(Color(0xFF1A1A1A), CircleShape),
-                    contentAlignment  = Alignment.Center
+    Scaffold(
+        modifier       = Modifier.fillMaxSize(),
+        containerColor = Color(0xFFF8F8F8),
+        topBar = {
+            Surface(modifier = Modifier.statusBarsPadding(), color = Color.White, shadowElevation = 2.dp) {
+                Row(
+                    modifier          = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint               = Color.White,
-                        modifier           = Modifier.size(56.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Text("Pesanan Dibuat!", fontSize = 26.sp, fontWeight = FontWeight.Black)
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    "Pesananmu sedang diproses oleh admin.\nKamu akan dihubungi untuk konfirmasi pembayaran.",
-                    fontSize  = 14.sp,
-                    color     = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
-                )
-                Spacer(modifier = Modifier.height(40.dp))
-                Button(
-                    onClick  = onOrderSuccess,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors   = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                    shape    = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Default.Home, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Kembali ke Beranda", color = Color.White, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                    }
+                    Text("Checkout", fontWeight = FontWeight.Black, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
                 }
             }
-        }
-    }
-
-    // ─── Checkout Form ────────────────────────────────────────────────────────
-    AnimatedVisibility(visible = !orderPlaced, enter = fadeIn(), exit = fadeOut()) {
-        Scaffold(
-            modifier       = Modifier.fillMaxSize(),
-            containerColor = Color(0xFFF8F8F8),
-            topBar = {
-                Surface(modifier = Modifier.statusBarsPadding(), color = Color.White, shadowElevation = 2.dp) {
+        },
+        bottomBar = {
+            Surface(modifier = Modifier.navigationBarsPadding().fillMaxWidth(), color = Color.White, shadowElevation = 16.dp) {
+                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
                     Row(
-                        modifier          = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
-                        }
-                        Text("Checkout", fontWeight = FontWeight.Black, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
+                        Text("Total Pembayaran", color = Color.Gray, fontSize = 13.sp)
+                        Text(Formatter.formatRupiah(grandTotal), fontSize = 20.sp, fontWeight = FontWeight.Black)
                     }
-                }
-            },
-            bottomBar = {
-                Surface(modifier = Modifier.navigationBarsPadding().fillMaxWidth(), color = Color.White, shadowElevation = 16.dp) {
-                    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-                        Row(
-                            modifier              = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment     = Alignment.CenterVertically
-                        ) {
-                            Text("Total Pembayaran", color = Color.Gray, fontSize = 13.sp)
-                            Text(Formatter.formatRupiah(total), fontSize = 20.sp, fontWeight = FontWeight.Black)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick  = {
-                                focusMgr.clearFocus()
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick  = {
+                            focusMgr.clearFocus()
+
+                            if (recipientName.isBlank() || shippingAddress.isBlank() || phone.isBlank()) {
+                                return@Button
+                            }
+                            
+                            val isDirectPurchase = items.any { it.id == -1 }
+                            
+                            if (isDirectPurchase) {
+                                val mockOrder = Order(
+                                    id = (1000..9999).random(),
+                                    totalPrice = grandTotal,
+                                    status = "pending",
+                                    createdAt = ""
+                                )
+                                cartViewModel.clearLocalCart()
+                                onOrderSuccess(mockOrder)
+                            } else {
                                 orderViewModel.createOrder(
                                     recipientName   = recipientName,
                                     shippingAddress = shippingAddress,
                                     phone           = phone,
                                     note            = note,
-                                    onSuccess       = { _ ->
+                                    courier         = selectedCourier,
+                                    paymentMethod   = selectedPayment,
+                                    onSuccess       = { order ->
                                         cartViewModel.clearLocalCart()
-                                        orderPlaced = true
+                                        onOrderSuccess(order.copy(totalPrice = grandTotal))
                                     },
-                                    onError         = { /* errorMsg state handles display */ }
+                                    onError         = { }
                                 )
-                            },
-                            enabled  = !isLoading,
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            colors   = ButtonDefaults.buttonColors(
-                                containerColor         = Color.Black,
-                                disabledContainerColor = Color(0xFF444444)
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            if (isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.5.dp)
-                            } else {
-                                Text("BUAT PESANAN", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                             }
+                        },
+                        enabled  = !isLoading && recipientName.isNotBlank() && shippingAddress.isNotBlank() && phone.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors   = ButtonDefaults.buttonColors(
+                            containerColor         = Color.Black,
+                            disabledContainerColor = Color(0xFF444444)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.5.dp)
+                        } else {
+                            Text("BUAT PESANAN", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         }
                     }
                 }
             }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
-                // ── Order Summary Card ─────────────────────────────────────────
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape  = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(1.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Ringkasan Pesanan", fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.5.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        items.forEach { item ->
-                            Row(
-                                modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text     = "${item.product.name} (${item.variant.size?.name ?: "-"}) ×${item.quantity}",
-                                    fontSize = 13.sp,
-                                    color    = Color.DarkGray,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text     = Formatter.formatRupiah(item.subtotal),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape  = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Ringkasan Pesanan", fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.5.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    items.forEach { item ->
                         Row(
-                            modifier              = Modifier.fillMaxWidth(),
+                            modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Total", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text(Formatter.formatRupiah(total), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                            Text(
+                                text     = "${item.product.name} (${item.variant.size?.name ?: "-"}) ×${item.quantity}",
+                                fontSize = 13.sp,
+                                color    = Color.DarkGray,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text     = Formatter.formatRupiah(item.subtotal),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
+                    
+                    Row(
+                        modifier              = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Ongkos Kirim ($selectedCourier)", fontSize = 13.sp, color = Color.Gray)
+                        Text(Formatter.formatRupiah(shippingFee), fontSize = 13.sp)
+                    }
+                    Row(
+                        modifier              = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Biaya Admin", fontSize = 13.sp, color = Color.Gray)
+                        Text(Formatter.formatRupiah(adminFee), fontSize = 13.sp)
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
+                    
+                    Row(
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Total Pesanan", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(Formatter.formatRupiah(grandTotal), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                    }
+                }
+            }
+
+            Text("Data Pengiriman", fontWeight = FontWeight.Black, fontSize = 16.sp)
+
+            val fieldColors = TextFieldDefaults.colors(
+                focusedContainerColor   = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedIndicatorColor   = Color.Black,
+                unfocusedIndicatorColor = Color(0xFFDDDDDD),
+                cursorColor             = Color.Black,
+                focusedTextColor        = Color.Black,
+                unfocusedTextColor      = Color.Black
+            )
+
+            TextField(
+                value         = recipientName,
+                onValueChange = { recipientName = it },
+                modifier      = Modifier.fillMaxWidth(),
+                label         = { Text("Nama Penerima*") },
+                leadingIcon   = { Icon(Icons.Default.Person, null, modifier = Modifier.size(20.dp)) },
+                colors        = fieldColors,
+                singleLine    = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
+            )
+
+            TextField(
+                value         = phone,
+                onValueChange = { phone = it },
+                modifier      = Modifier.fillMaxWidth(),
+                label         = { Text("Nomor HP*") },
+                leadingIcon   = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp)) },
+                colors        = fieldColors,
+                singleLine    = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
+            )
+
+            TextField(
+                value         = shippingAddress,
+                onValueChange = { shippingAddress = it },
+                modifier      = Modifier.fillMaxWidth().heightIn(min = 80.dp),
+                label         = { Text("Alamat Lengkap*") },
+                leadingIcon   = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(20.dp)) },
+                colors        = fieldColors,
+                maxLines      = 3,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
+            )
+
+            Text("Pilih Kurir", fontWeight = FontWeight.Black, fontSize = 16.sp)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                couriers.forEach { courier ->
+                    val selected = selectedCourier == courier
+                    Surface(
+                        modifier = Modifier.weight(1f).clickable { selectedCourier = courier },
+                        color    = if (selected) Color.Black else Color.White,
+                        shape    = RoundedCornerShape(12.dp),
+                        border   = if (selected) null else BorderStroke(1.dp, Color(0xFFDDDDDD))
+                    ) {
+                        Box(modifier = Modifier.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+                            Text(courier, color = if (selected) Color.White else Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "Data Pengiriman",
-                    fontWeight = FontWeight.Black,
-                    fontSize   = 16.sp,
-                    letterSpacing = 0.5.sp
-                )
-
-                val fieldColors = TextFieldDefaults.colors(
-                    focusedContainerColor   = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedIndicatorColor   = Color.Black,
-                    unfocusedIndicatorColor = Color(0xFFDDDDDD),
-                    cursorColor             = Color.Black,
-                    focusedTextColor        = Color.Black,
-                    unfocusedTextColor      = Color.Black,
-                    focusedPlaceholderColor   = Color.LightGray,
-                    unfocusedPlaceholderColor = Color.LightGray
-                )
-
-                // Nama Penerima
-                TextField(
-                    value         = recipientName,
-                    onValueChange = { recipientName = it },
-                    modifier      = Modifier.fillMaxWidth(),
-                    label         = { Text("Nama Penerima*") },
-                    leadingIcon   = { Icon(Icons.Default.Person, null, modifier = Modifier.size(20.dp)) },
-                    colors        = fieldColors,
-                    singleLine    = true,
-                    shape         = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-                )
-
-                // Nomor HP
-                TextField(
-                    value         = phone,
-                    onValueChange = { phone = it },
-                    modifier      = Modifier.fillMaxWidth(),
-                    label         = { Text("Nomor HP*") },
-                    leadingIcon   = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp)) },
-                    colors        = fieldColors,
-                    singleLine    = true,
-                    shape         = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-                )
-
-                // Alamat Pengiriman
-                TextField(
-                    value         = shippingAddress,
-                    onValueChange = { shippingAddress = it },
-                    modifier      = Modifier.fillMaxWidth().heightIn(min = 100.dp),
-                    label         = { Text("Alamat Lengkap*") },
-                    leadingIcon   = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(20.dp)) },
-                    colors        = fieldColors,
-                    maxLines      = 4,
-                    shape         = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-                )
-
-                // Catatan
-                TextField(
-                    value         = note,
-                    onValueChange = { note = it },
-                    modifier      = Modifier.fillMaxWidth(),
-                    label         = { Text("Catatan (opsional)") },
-                    placeholder   = { Text("Misal: titip ke tetangga, dll.", fontSize = 13.sp) },
-                    colors        = fieldColors,
-                    maxLines      = 3,
-                    shape         = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { focusMgr.clearFocus() })
-                )
-
-                // Error Message
-                if (errorMsg != null) {
-                    Surface(
-                        color = Color(0xFFFFEEEE),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text     = errorMsg,
-                            color    = Color(0xFFCC0000),
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
-                        )
-                    }
-                }
-
-                // Transfer Info
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
-                    shape  = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("📋 Informasi Pembayaran", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF8B6914))
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            "Pembayaran dilakukan via transfer manual. Admin akan menghubungi kamu setelah pesanan diterima untuk konfirmasi.",
-                            fontSize  = 12.sp,
-                            color     = Color(0xFF8B6914),
-                            lineHeight = 18.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(80.dp))
             }
+
+            Text("Metode Pembayaran", fontWeight = FontWeight.Black, fontSize = 16.sp)
+            paymentMethods.forEach { method ->
+                val selected = selectedPayment == method
+                Surface(
+                    modifier = Modifier.fillMaxWidth().clickable { selectedPayment = method },
+                    color    = if (selected) Color.Black else Color.White,
+                    shape    = RoundedCornerShape(12.dp),
+                    border   = if (selected) null else BorderStroke(1.dp, Color(0xFFDDDDDD))
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = Color.White, unselectedColor = Color.Gray))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(method, color = if (selected) Color.White else Color.Black, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
+            if (errorMsg != null) {
+                Text(errorMsg, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
+            }
+
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

@@ -30,7 +30,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val errorMessage: State<String?> = _errorMessage
 
     init {
-        // Restore user info from saved session
         if (sessionManager.isLoggedIn()) {
             val id    = sessionManager.getUserId()
             val name  = sessionManager.getUserName()
@@ -40,8 +39,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-    // ─── Login ────────────────────────────────────────────────────────────────
 
     fun login(email: String, password: String, onSuccess: () -> Unit) {
         if (email.isBlank() || password.isBlank()) {
@@ -65,8 +62,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-    // ─── Register ─────────────────────────────────────────────────────────────
 
     fun register(
         name:            String,
@@ -107,8 +102,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Logout ───────────────────────────────────────────────────────────────
-
     fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch {
             val token = sessionManager.bearerToken()
@@ -122,10 +115,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
-
     fun clearError() { _errorMessage.value = null }
 
-    /** Mengembalikan token siap pakai (prefix Bearer) atau null */
     fun bearerToken(): String? = sessionManager.bearerToken()
 }

@@ -39,6 +39,7 @@ fun ProductDetailScreen(
     cartViewModel: CartViewModel,
     onBack:        () -> Unit,
     onNavigateToCart:    () -> Unit,
+    onNavigateToCheckout: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToLogin:   () -> Unit
 ) {
@@ -48,12 +49,10 @@ fun ProductDetailScreen(
     var selectedVariantId by remember { mutableIntStateOf(-1) }
     var quantity          by remember { mutableIntStateOf(1) }
 
-    // Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     val cartSuccess       = cartViewModel.successMessage.value
     val cartError         = cartViewModel.errorMessage.value
 
-    // Auth gate dialog
     var showLoginDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(productId) { viewModel.fetchProductById(productId) }
@@ -63,7 +62,6 @@ fun ProductDetailScreen(
         quantity          = 1
     }
 
-    // Show snackbar on cart messages
     LaunchedEffect(cartSuccess) {
         if (cartSuccess != null) {
             snackbarHostState.showSnackbar(cartSuccess)
@@ -80,7 +78,6 @@ fun ProductDetailScreen(
     val selectedVariant = product?.variants?.find { it.id == selectedVariantId }
     val displayStock    = selectedVariant?.stock ?: product?.variants?.sumOf { it.stock } ?: 0
 
-    // ─── Login Required Dialog ─────────────────────────────────────────────────
     if (showLoginDialog) {
         AlertDialog(
             onDismissRequest = { showLoginDialog = false },
@@ -123,7 +120,6 @@ fun ProductDetailScreen(
                         modifier   = Modifier.padding(start = 8.dp)
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    // Cart icon with badge
                     BadgedBox(
                         badge = {
                             if (cartViewModel.totalItems > 0) {
@@ -154,20 +150,23 @@ fun ProductDetailScreen(
                 shadowElevation = 16.dp
             ) {
                 Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // ─ Add to Cart
                     Button(
                         onClick = {
+                            val currentProduct = product
                             if (!authViewModel.isLoggedIn.value) {
                                 showLoginDialog = true
-                            } else if (selectedVariantId == -1) {
-                                // Tidak ada varian dipilih
-                            } else {
-                                cartViewModel.addToCart(
-                                    variantId = selectedVariantId,
-                                    quantity  = quantity,
-                                    onSuccess = { },
-                                    onError   = { }
-                                )
+                            } else if (selectedVariantId != -1 && currentProduct != null) {
+                                val variant = currentProduct.variants.find { it.id == selectedVariantId }
+                                if (variant != null) {
+                                    cartViewModel.addToCart(
+                                        variantId = selectedVariantId,
+                                        quantity  = quantity,
+                                        product   = currentProduct,
+                                        variant   = variant,
+                                        onSuccess = { },
+                                        onError   = { }
+                                    )
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f).height(56.dp),
@@ -177,26 +176,23 @@ fun ProductDetailScreen(
                         shape    = RoundedCornerShape(16.dp)
                     ) {
                         Text(
-                            text  = if (selectedVariantId == -1) "Pilih Size" else "Keranjang",
+                            text  = if (selectedVariantId == -1) "Pilih Size" else "Tambah Keranjang",
                             color = if (selectedVariantId != -1) Color.Black else Color.Gray,
                             fontWeight = FontWeight.Bold,
-                            fontSize   = 13.sp
+                            fontSize   = 12.sp
                         )
                     }
-                    // ─ Buy Now
                     Button(
                         onClick = {
+                            val currentProduct = product
                             if (!authViewModel.isLoggedIn.value) {
                                 showLoginDialog = true
-                            } else if (selectedVariantId == -1) {
-                                // Tidak ada varian dipilih
-                            } else {
-                                cartViewModel.addToCart(
-                                    variantId = selectedVariantId,
-                                    quantity  = quantity,
-                                    onSuccess = { onNavigateToCart() },
-                                    onError   = { }
-                                )
+                            } else if (selectedVariantId != -1 && currentProduct != null) {
+                                val variant = currentProduct.variants.find { it.id == selectedVariantId }
+                                if (variant != null) {
+                                    cartViewModel.prepareDirectPurchase(currentProduct, variant, quantity)
+                                    onNavigateToCheckout()
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f).height(56.dp),
@@ -227,7 +223,6 @@ fun ProductDetailScreen(
                     .verticalScroll(rememberScrollState())
                     .background(Color.White)
             ) {
-                // Image Carousel
                 val imageUrls = product.images.map { it.imageUrl }.toMutableList()
                 if (!product.sizeChartUrl.isNullOrEmpty()) imageUrls.add(product.sizeChartUrl)
 
@@ -261,7 +256,6 @@ fun ProductDetailScreen(
                     Text(text = Formatter.formatRupiah(product.price), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Stock
                     Surface(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp)) {
                         Text(
                             text     = "Stok: $displayStock",
@@ -274,7 +268,6 @@ fun ProductDetailScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Size Selection
                     Text("PILIH UKURAN", fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -321,7 +314,6 @@ fun ProductDetailScreen(
                         }
                     }
 
-                    // Size not selected warning
                     if (selectedVariantId == -1 && product.variants.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -333,7 +325,6 @@ fun ProductDetailScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Quantity
                     Text("JUMLAH", fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -360,14 +351,12 @@ fun ProductDetailScreen(
                     HorizontalDivider(color = Color(0xFFEEEEEE))
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Description
                     Text("DESKRIPSI", fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Material: ${product.material ?: "-"}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(product.description ?: "Tidak ada deskripsi.", fontSize = 15.sp, lineHeight = 24.sp, color = Color.Gray)
 
-                    // Guest notice
                     if (!authViewModel.isLoggedIn.value) {
                         Spacer(modifier = Modifier.height(24.dp))
                         Surface(

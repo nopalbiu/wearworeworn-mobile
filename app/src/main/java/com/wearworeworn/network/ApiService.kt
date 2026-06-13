@@ -5,8 +5,6 @@ import retrofit2.http.*
 
 interface ApiService {
 
-    // ─── Products ─────────────────────────────────────────────────────────────
-
     @GET("products")
     suspend fun getProducts(): List<Product>
 
@@ -19,8 +17,6 @@ interface ApiService {
     @GET("sizes")
     suspend fun getSizes(): List<Size>
 
-    // ─── Auth ─────────────────────────────────────────────────────────────────
-
     @POST("login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
 
@@ -32,8 +28,6 @@ interface ApiService {
 
     @GET("user")
     suspend fun getUser(@Header("Authorization") token: String): User
-
-    // ─── Cart ─────────────────────────────────────────────────────────────────
 
     @GET("cart")
     suspend fun getCart(@Header("Authorization") token: String): List<CartItem>
@@ -56,8 +50,6 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") id: Int
     ): Any
-
-    // ─── Orders ───────────────────────────────────────────────────────────────
 
     @POST("orders")
     suspend fun createOrder(

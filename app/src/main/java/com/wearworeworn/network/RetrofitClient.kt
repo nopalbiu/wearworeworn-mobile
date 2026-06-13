@@ -6,8 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // Pastikan IP di bawah ini sama dengan IP Laptop Anda dan tambahkan port :8000
-    private const val BASE_URL = "http://192.168.1.3:8000/api/"
+    private const val BASE_URL = "http://10.0.2.2:8000/api/"
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)

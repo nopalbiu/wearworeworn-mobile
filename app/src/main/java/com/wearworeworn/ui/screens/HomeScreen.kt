@@ -76,7 +76,6 @@ fun HomeScreen(
                             letterSpacing = (-1).sp
                         )
                         Row {
-                            // ─ Cart icon with badge ───────────────────────────
                             BadgedBox(
                                 badge = {
                                     if (cartViewModel.totalItems > 0) {
@@ -98,7 +97,6 @@ fun HomeScreen(
                                 }
                             }
 
-                            // ─ Profile / Login icon ───────────────────────────
                             IconButton(onClick = {
                                 focusManager.clearFocus()
                                 if (isLoggedIn) onNavigateToProfile() else onNavigateToLogin()
@@ -112,7 +110,6 @@ fun HomeScreen(
                         }
                     }
 
-                    // ─ Search Bar ─────────────────────────────────────────────
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         TextField(
                             value         = viewModel.searchQuery.value,
@@ -172,7 +169,7 @@ fun HomeScreen(
                     Icon(Icons.Default.FilterList, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("FILTER", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                    // Show active filter count
+                    
                     val activeFilters = viewModel.selectedCategories.size + viewModel.selectedSizes.size +
                         (if (viewModel.selectedPriceRange.value != null) 1 else 0)
                     if (activeFilters > 0) {
@@ -199,7 +196,6 @@ fun HomeScreen(
                 bottom = innerPadding.calculateBottomPadding() + 80.dp
             )
         ) {
-            // ── Hero Banner ──────────────────────────────────────────────────
             item(span = { GridItemSpan(2) }) {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
@@ -221,7 +217,7 @@ fun HomeScreen(
                             fontSize  = 14.sp,
                             textAlign = TextAlign.Center
                         )
-                        // Guest prompt
+                        
                         if (!isLoggedIn) {
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedButton(
@@ -236,7 +232,6 @@ fun HomeScreen(
                 }
             }
 
-            // ── Catalog Header ───────────────────────────────────────────────
             item(span = { GridItemSpan(2) }) {
                 Row(
                     modifier              = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 16.dp),
@@ -285,7 +280,6 @@ fun HomeScreen(
                 }
             }
 
-            // ── Product Grid ─────────────────────────────────────────────────
             if (isLoading) {
                 item(span = { GridItemSpan(2) }) {
                     Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
@@ -329,7 +323,6 @@ fun HomeScreen(
             }
         }
 
-        // ── Filter Bottom Sheet ───────────────────────────────────────────────
         if (showFilterSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showFilterSheet = false },

@@ -45,7 +45,6 @@ fun LoginScreen(
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // Clear error ketika layar pertama muncul
     LaunchedEffect(Unit) { viewModel.clearError() }
 
     Box(
@@ -67,7 +66,6 @@ fun LoginScreen(
             horizontalAlignment   = Alignment.CenterHorizontally
         ) {
 
-            // ── Logo ──────────────────────────────────────────────────────────
             Text(
                 text       = "WearWoreWorn",
                 fontSize   = 32.sp,
@@ -85,7 +83,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // ── Email Field ───────────────────────────────────────────────────
             TextField(
                 value         = email,
                 onValueChange = { email = it; viewModel.clearError() },
@@ -116,7 +113,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── Password Field ────────────────────────────────────────────────
             TextField(
                 value         = password,
                 onValueChange = { password = it; viewModel.clearError() },
@@ -159,7 +155,6 @@ fun LoginScreen(
                 )
             )
 
-            // ── Error Message ─────────────────────────────────────────────────
             Spacer(modifier = Modifier.height(8.dp))
             AnimatedVisibility(
                 visible = errorMessage != null,
@@ -177,7 +172,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Login Button ──────────────────────────────────────────────────
             Button(
                 onClick  = {
                     focusManager.clearFocus()
@@ -210,7 +204,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Divider ───────────────────────────────────────────────────────
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth()
@@ -226,7 +219,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Register Button ───────────────────────────────────────────────
             OutlinedButton(
                 onClick  = onNavigateToRegister,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -244,7 +236,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Guest link ────────────────────────────────────────────────────
             TextButton(onClick = onLoginSuccess) {
                 Text(
                     "Lanjutkan sebagai Tamu",

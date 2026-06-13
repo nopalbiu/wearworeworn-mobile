@@ -33,6 +33,5 @@ class SessionManager(context: Context) {
 
     fun clearSession() = prefs.edit().clear().apply()
 
-    /** Token siap pakai dengan prefix "Bearer " */
     fun bearerToken(): String? = getToken()?.let { "Bearer $it" }
 }

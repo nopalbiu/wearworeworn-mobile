@@ -6,7 +6,9 @@ data class OrderRequest(
     @SerializedName("nama_penerima")     val recipientName:   String,
     @SerializedName("alamat_pengiriman") val shippingAddress: String,
     @SerializedName("no_hp")            val phone:           String,
-    @SerializedName("catatan")          val note:            String
+    @SerializedName("catatan")          val note:            String,
+    @SerializedName("kurir")            val courier:         String,
+    @SerializedName("metode_pembayaran") val paymentMethod:   String
 )
 
 data class Order(

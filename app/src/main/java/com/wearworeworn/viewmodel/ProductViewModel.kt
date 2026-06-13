@@ -31,11 +31,9 @@ class ProductViewModel : ViewModel() {
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
 
-    // UI States for Filtering/Sorting
     var searchQuery = mutableStateOf("")
     var selectedSortOption = mutableStateOf("SORT BY")
     
-    // Multi-select for categories and sizes
     val selectedCategories = mutableStateListOf<Int>()
     val selectedSizes = mutableStateListOf<Int>()
     
@@ -110,24 +108,20 @@ class ProductViewModel : ViewModel() {
         searchQuery.value = ""
     }
 
-    // Logic for filtered and sorted products
     val filteredProducts: List<Product>
         get() {
             var list = _products.value
 
-            // 1. Search Filter
             if (searchQuery.value.isNotEmpty()) {
                 list = list.filter { it.name.contains(searchQuery.value, ignoreCase = true) }
             }
 
-            // 2. Category Filter (Multi-select)
             if (selectedCategories.isNotEmpty()) {
                 list = list.filter { product ->
                     product.categories.any { cat -> selectedCategories.contains(cat.id) }
                 }
             }
 
-            // 3. Size Filter (Multi-select)
             if (selectedSizes.isNotEmpty()) {
                 list = list.filter { product ->
                     product.variants.any { variant -> 
@@ -136,14 +130,12 @@ class ProductViewModel : ViewModel() {
                 }
             }
 
-            // 4. Price Range Filter
             when (selectedPriceRange.value) {
                 "< Rp 100.000" -> list = list.filter { it.price < 100000 }
                 "Rp 100.000 - Rp 500.000" -> list = list.filter { it.price in 100000.0..500000.0 }
                 "> Rp 500.000" -> list = list.filter { it.price > 500000 }
             }
 
-            // 5. Sorting
             return when (selectedSortOption.value) {
                 "Terbaru" -> list.sortedByDescending { it.id }
                 "Harga: Termurah" -> list.sortedBy { it.price }
