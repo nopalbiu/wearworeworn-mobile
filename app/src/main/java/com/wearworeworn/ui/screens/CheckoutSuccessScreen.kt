@@ -2,10 +2,12 @@ package com.wearworeworn.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Home
@@ -23,20 +25,59 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wearworeworn.util.Formatter
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
+
+/**
+ * Menghitung sisa detik dari deadline pembayaran (24 jam setelah created_at).
+ * Jika createdAt kosong/null atau gagal di-parse, fallback ke 24 jam penuh.
+ */
+private fun calculateRemainingSeconds(createdAt: String?): Long {
+    if (createdAt.isNullOrBlank()) return 24 * 3600L
+
+    return try {
+        // Format dari Laravel: "2026-06-14T10:00:00.000000Z" atau "2026-06-14 10:00:00"
+        val format = if (createdAt.contains("T")) {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        } else {
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        }
+        format.timeZone = TimeZone.getTimeZone("UTC")
+
+        val orderTime = format.parse(createdAt)
+        if (orderTime != null) {
+            val deadlineMs = orderTime.time + (24 * 3600 * 1000L) // 24 jam setelah order dibuat
+            val nowMs = System.currentTimeMillis()
+            val remainingMs = deadlineMs - nowMs
+            if (remainingMs > 0) (remainingMs / 1000).coerceAtMost(24 * 3600L) else 0L
+        } else {
+            24 * 3600L // fallback
+        }
+    } catch (e: Exception) {
+        Log.e("CheckoutSuccess", "Failed to parse createdAt: $createdAt", e)
+        24 * 3600L // fallback
+    }
+}
 
 @Composable
 fun CheckoutSuccessScreen(
-    orderId: Int,
-    totalPrice: Double,
-    onBackToHome: () -> Unit
+    orderId:        Int,
+    totalPrice:     Double,
+    createdAt:      String? = null,
+    isFromMyOrders: Boolean = false,
+    onBack:         () -> Unit
 ) {
-    val context = LocalContext.current
+    val context          = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
-    
-    var remainingSeconds by remember { mutableStateOf(24 * 3600L) }
 
-    LaunchedEffect(Unit) {
+    // Hitung sisa waktu berdasarkan created_at dari server
+    var remainingSeconds by remember(createdAt) {
+        mutableStateOf(calculateRemainingSeconds(createdAt))
+    }
+
+    LaunchedEffect(createdAt) {
         while (remainingSeconds > 0) {
             delay(1000)
             remainingSeconds--
@@ -167,14 +208,20 @@ fun CheckoutSuccessScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
-                onClick = onBackToHome,
+                onClick  = onBack,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, Color.Black)
+                shape    = RoundedCornerShape(16.dp),
+                border   = BorderStroke(1.dp, Color.Black)
             ) {
-                Icon(Icons.Default.Home, contentDescription = null, tint = Color.Black)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Kembali ke Beranda", color = Color.Black, fontWeight = FontWeight.Bold)
+                if (isFromMyOrders) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.Black)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Kembali ke Pesanan", color = Color.Black, fontWeight = FontWeight.Bold)
+                } else {
+                    Icon(Icons.Default.Home, contentDescription = null, tint = Color.Black)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Kembali ke Beranda", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

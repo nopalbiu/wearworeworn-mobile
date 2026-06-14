@@ -59,8 +59,8 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize(),
         topBar   = {
             Surface(
-                modifier      = Modifier.statusBarsPadding(),
-                color         = Color.White,
+                modifier        = Modifier.statusBarsPadding(),
+                color           = Color.White,
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
@@ -265,9 +265,9 @@ fun HomeScreen(
                             }
                         }
                         DropdownMenu(
-                            expanded          = showSortMenu,
-                            onDismissRequest  = { showSortMenu = false },
-                            modifier          = Modifier.background(Color.White).width(160.dp)
+                            expanded         = showSortMenu,
+                            onDismissRequest = { showSortMenu = false },
+                            modifier         = Modifier.background(Color.White).width(160.dp)
                         ) {
                             sortOptions.forEach { option ->
                                 DropdownMenuItem(

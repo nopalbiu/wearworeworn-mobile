@@ -39,8 +39,10 @@ fun CheckoutScreen(
     onBack:         () -> Unit,
     onOrderSuccess: (Order) -> Unit
 ) {
-    val items      = cartViewModel.cartItems.value
-    val total      = cartViewModel.totalPrice
+    val directBuyItem = cartViewModel.directBuyItem.value
+    val isDirectBuy   = directBuyItem != null
+    val items      = if (isDirectBuy) listOf(directBuyItem!!) else cartViewModel.cartItems.value
+    val total      = if (isDirectBuy) directBuyItem!!.subtotal else cartViewModel.totalPrice
     val isLoading  = orderViewModel.isLoading.value
     val errorMsg   = orderViewModel.errorMessage.value
     val focusMgr   = LocalFocusManager.current
@@ -83,7 +85,10 @@ fun CheckoutScreen(
                     modifier          = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        cartViewModel.clearDirectBuy()
+                        onBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                     Text("Checkout", fontWeight = FontWeight.Black, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
@@ -110,17 +115,22 @@ fun CheckoutScreen(
                                 return@Button
                             }
                             
-                            val isDirectPurchase = items.any { it.id == -1 }
-                            
-                            if (isDirectPurchase) {
-                                val mockOrder = Order(
-                                    id = (1000..9999).random(),
-                                    totalPrice = grandTotal,
-                                    status = "pending",
-                                    createdAt = ""
+                            if (isDirectBuy) {
+                                orderViewModel.directBuy(
+                                    recipientName   = recipientName,
+                                    shippingAddress = shippingAddress,
+                                    phone           = phone,
+                                    note            = note,
+                                    courier         = selectedCourier,
+                                    paymentMethod   = selectedPayment,
+                                    variantId       = directBuyItem!!.variant.id,
+                                    qty             = directBuyItem!!.quantity,
+                                    onSuccess       = { order ->
+                                        cartViewModel.clearDirectBuy()
+                                        onOrderSuccess(order.copy(totalPrice = grandTotal))
+                                    },
+                                    onError         = { }
                                 )
-                                cartViewModel.clearLocalCart()
-                                onOrderSuccess(mockOrder)
                             } else {
                                 orderViewModel.createOrder(
                                     recipientName   = recipientName,
@@ -137,7 +147,7 @@ fun CheckoutScreen(
                                 )
                             }
                         },
-                        enabled  = !isLoading && recipientName.isNotBlank() && shippingAddress.isNotBlank() && phone.isNotBlank(),
+                        enabled  = !isLoading && recipientName.isNotBlank() && shippingAddress.isNotBlank() && phone.isNotBlank() && phone.length >= 11,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors   = ButtonDefaults.buttonColors(
                             containerColor         = Color.Black,
@@ -164,8 +174,8 @@ fun CheckoutScreen(
         ) {
 
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape  = RoundedCornerShape(16.dp),
+                colors    = CardDefaults.cardColors(containerColor = Color.White),
+                shape     = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(1.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -184,8 +194,8 @@ fun CheckoutScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text     = Formatter.formatRupiah(item.subtotal),
-                                fontSize = 13.sp,
+                                text       = Formatter.formatRupiah(item.subtotal),
+                                fontSize   = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -222,13 +232,13 @@ fun CheckoutScreen(
             Text("Data Pengiriman", fontWeight = FontWeight.Black, fontSize = 16.sp)
 
             val fieldColors = TextFieldDefaults.colors(
-                focusedContainerColor   = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedIndicatorColor   = Color.Black,
-                unfocusedIndicatorColor = Color(0xFFDDDDDD),
-                cursorColor             = Color.Black,
-                focusedTextColor        = Color.Black,
-                unfocusedTextColor      = Color.Black
+                focusedContainerColor     = Color.White,
+                unfocusedContainerColor   = Color.White,
+                focusedIndicatorColor     = Color.Black,
+                unfocusedIndicatorColor   = Color(0xFFDDDDDD),
+                cursorColor               = Color.Black,
+                focusedTextColor          = Color.Black,
+                unfocusedTextColor        = Color.Black
             )
 
             TextField(
@@ -243,17 +253,27 @@ fun CheckoutScreen(
                 keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
             )
 
-            TextField(
-                value         = phone,
-                onValueChange = { phone = it },
-                modifier      = Modifier.fillMaxWidth(),
-                label         = { Text("Nomor HP*") },
-                leadingIcon   = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp)) },
-                colors        = fieldColors,
-                singleLine    = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-            )
+            Column {
+                TextField(
+                    value         = phone,
+                    onValueChange = { phone = it },
+                    modifier      = Modifier.fillMaxWidth(),
+                    label         = { Text("Nomor HP*") },
+                    leadingIcon   = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp)) },
+                    colors        = fieldColors,
+                    singleLine    = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
+                )
+                if (phone.isNotEmpty() && phone.length < 11) {
+                    Text(
+                        text = "Nomor HP minimal 11 angka",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                    )
+                }
+            }
 
             TextField(
                 value         = shippingAddress,
