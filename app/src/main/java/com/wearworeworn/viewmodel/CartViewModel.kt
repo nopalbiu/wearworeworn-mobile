@@ -30,6 +30,10 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     val totalPrice: Double get() = _cartItems.value.sumOf { it.subtotal }
     val totalItems: Int    get() = _cartItems.value.sumOf { it.quantity }
 
+    // Direct buy state (terpisah dari keranjang)
+    private val _directBuyItem = mutableStateOf<CartItem?>(null)
+    val directBuyItem: State<CartItem?> = _directBuyItem
+
     fun loadCart() {
         val token = sessionManager.bearerToken() ?: return
         viewModelScope.launch {
@@ -123,6 +127,19 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearLocalCart() {
         _cartItems.value = emptyList()
+    }
+
+    fun setDirectBuy(product: Product, variant: ProductVariant, quantity: Int) {
+        _directBuyItem.value = CartItem(
+            id = -1,
+            product = product,
+            variant = variant,
+            quantity = quantity
+        )
+    }
+
+    fun clearDirectBuy() {
+        _directBuyItem.value = null
     }
 
     fun clearMessages() {

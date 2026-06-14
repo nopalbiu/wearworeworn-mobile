@@ -190,7 +190,11 @@ fun ProductDetailScreen(
                             } else if (selectedVariantId != -1 && currentProduct != null) {
                                 val variant = currentProduct.variants.find { it.id == selectedVariantId }
                                 if (variant != null) {
-                                    cartViewModel.prepareDirectPurchase(currentProduct, variant, quantity)
+                                    cartViewModel.setDirectBuy(
+                                        product  = currentProduct,
+                                        variant  = variant,
+                                        quantity = quantity
+                                    )
                                     onNavigateToCheckout()
                                 }
                             }

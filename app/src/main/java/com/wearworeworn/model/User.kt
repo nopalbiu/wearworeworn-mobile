@@ -24,3 +24,9 @@ data class AuthResponse(
     @SerializedName("token") val token: String,
     @SerializedName("user")  val user:  User
 )
+
+data class ChangePasswordRequest(
+    @SerializedName("current_password")      val currentPassword:     String,
+    @SerializedName("new_password")           val newPassword:          String,
+    @SerializedName("new_password_confirmation") val newPasswordConfirm: String
+)

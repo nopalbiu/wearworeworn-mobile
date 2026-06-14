@@ -33,8 +33,8 @@ import com.wearworeworn.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit,
+    viewModel:            AuthViewModel,
+    onLoginSuccess:       () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
     val isLoading    = viewModel.isLoading.value
@@ -50,14 +50,10 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0A0A0A), Color(0xFF1A1A1A))
-                )
-            )
+            .background(Brush.verticalGradient(listOf(Color(0xFF0A0A0A), Color(0xFF1A1A1A))))
     ) {
         Column(
-            modifier = Modifier
+            modifier            = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
@@ -65,12 +61,11 @@ fun LoginScreen(
             verticalArrangement   = Arrangement.Center,
             horizontalAlignment   = Alignment.CenterHorizontally
         ) {
-
             Text(
-                text       = "WearWoreWorn",
-                fontSize   = 32.sp,
-                fontWeight = FontWeight.Black,
-                color      = Color.White,
+                text          = "WearWoreWorn",
+                fontSize      = 32.sp,
+                fontWeight    = FontWeight.Black,
+                color         = Color.White,
                 letterSpacing = (-1).sp
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -124,10 +119,10 @@ fun LoginScreen(
                 trailingIcon  = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector      = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            imageVector        = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                             contentDescription = null,
-                            tint             = Color(0xFF666666),
-                            modifier         = Modifier.size(20.dp)
+                            tint               = Color(0xFF666666),
+                            modifier           = Modifier.size(20.dp)
                         )
                     }
                 },
@@ -156,11 +151,7 @@ fun LoginScreen(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            AnimatedVisibility(
-                visible = errorMessage != null,
-                enter   = fadeIn(),
-                exit    = fadeOut()
-            ) {
+            AnimatedVisibility(visible = errorMessage != null, enter = fadeIn(), exit = fadeOut()) {
                 Text(
                     text      = errorMessage ?: "",
                     color     = Color(0xFFFF6B6B),
@@ -186,17 +177,13 @@ fun LoginScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier  = Modifier.size(22.dp),
-                        color     = Color.Black,
-                        strokeWidth = 2.5.dp
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.Black, strokeWidth = 2.5.dp)
                 } else {
                     Text(
                         "MASUK",
-                        color      = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize   = 15.sp,
+                        color         = Color.Black,
+                        fontWeight    = FontWeight.Bold,
+                        fontSize      = 15.sp,
                         letterSpacing = 1.5.sp
                     )
                 }
@@ -204,16 +191,9 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier          = Modifier.fillMaxWidth()
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF333333))
-                Text(
-                    "  atau  ",
-                    color    = Color(0xFF666666),
-                    fontSize = 12.sp
-                )
+                Text("  atau  ", color = Color(0xFF666666), fontSize = 12.sp)
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF333333))
             }
 
@@ -227,9 +207,9 @@ fun LoginScreen(
             ) {
                 Text(
                     "BUAT AKUN BARU",
-                    color      = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize   = 15.sp,
+                    color         = Color.White,
+                    fontWeight    = FontWeight.Bold,
+                    fontSize      = 15.sp,
                     letterSpacing = 1.sp
                 )
             }
@@ -237,11 +217,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             TextButton(onClick = onLoginSuccess) {
-                Text(
-                    "Lanjutkan sebagai Tamu",
-                    color    = Color(0xFF666666),
-                    fontSize = 13.sp
-                )
+                Text("Lanjutkan sebagai Tamu", color = Color(0xFF666666), fontSize = 13.sp)
             }
         }
     }

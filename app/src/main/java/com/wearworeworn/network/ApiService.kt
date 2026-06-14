@@ -57,6 +57,24 @@ interface ApiService {
         @Body request: OrderRequest
     ): OrderResponse
 
+    @POST("orders/direct-buy")
+    suspend fun directBuy(
+        @Header("Authorization") token: String,
+        @Body request: DirectBuyRequest
+    ): OrderResponse
+
     @GET("orders")
     suspend fun getOrders(@Header("Authorization") token: String): List<Order>
+
+    @POST("change-password")
+    suspend fun changePassword(
+        @Header("Authorization") token: String,
+        @Body request: ChangePasswordRequest
+    ): Any
+
+    @GET("orders/{id}")
+    suspend fun getOrderDetail(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int
+    ): OrderDetail
 }

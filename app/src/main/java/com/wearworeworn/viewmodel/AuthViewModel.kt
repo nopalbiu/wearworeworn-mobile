@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.wearworeworn.model.ChangePasswordRequest
 import com.wearworeworn.model.LoginRequest
 import com.wearworeworn.model.RegisterRequest
 import com.wearworeworn.model.User
@@ -118,4 +119,44 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun clearError() { _errorMessage.value = null }
 
     fun bearerToken(): String? = sessionManager.bearerToken()
+
+    fun changePassword(
+        currentPassword: String,
+        newPassword:     String,
+        newPasswordConfirm: String,
+        onSuccess: () -> Unit,
+        onError:   (String) -> Unit
+    ) {
+        if (currentPassword.isBlank() || newPassword.isBlank() || newPasswordConfirm.isBlank()) {
+            onError("Semua kolom harus diisi.")
+            return
+        }
+        if (newPassword != newPasswordConfirm) {
+            onError("Konfirmasi password baru tidak cocok.")
+            return
+        }
+        if (newPassword.length < 8) {
+            onError("Password baru minimal 8 karakter.")
+            return
+        }
+        val token = sessionManager.bearerToken() ?: run {
+            onError("Sesi habis. Silakan login kembali.")
+            return
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                RetrofitClient.instance.changePassword(
+                    token,
+                    ChangePasswordRequest(currentPassword, newPassword, newPasswordConfirm)
+                )
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AUTH", "Change password error: ${e.message}")
+                onError("Gagal mengubah password. Pastikan password saat ini benar.")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }
