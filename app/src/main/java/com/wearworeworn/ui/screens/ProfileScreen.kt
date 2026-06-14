@@ -42,34 +42,32 @@ fun ProfileScreen(
         ?.joinToString("") { it.first().uppercase() }
         ?: "?"
 
-    // ─── Logout dialog ────────────────────────────────────────────────────
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title            = { Text("Keluar?", fontWeight = FontWeight.Bold) },
-            text             = { Text("Kamu akan keluar dari akun ini.", color = Color.Gray) },
+            text             = { Text("Kamu akan keluar dari akun ini.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
                         showLogoutDialog = false
                         viewModel.logout { onLogout() }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Keluar", color = Color.White)
+                    Text("Keluar", color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Batal", color = Color.Gray)
+                    Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color.White,
-            shape          = RoundedCornerShape(20.dp)
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape          = RoundedCornerShape(12.dp)
         )
     }
 
-    // ─── Change Password dialog ───────────────────────────────────────────
     if (showPasswordDialog) {
         ChangePasswordDialog(
             viewModel = viewModel,
@@ -80,119 +78,120 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // ─── Header ──────────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color(0xFF0A0A0A), Color(0xFF2A2A2A))))
+                .background(MaterialTheme.colorScheme.surface)
                 .statusBarsPadding()
-                .padding(bottom = 40.dp)
+                .padding(bottom = 64.dp)
         ) {
             IconButton(
                 onClick  = onBack,
                 modifier = Modifier.padding(8.dp).align(Alignment.TopStart)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = MaterialTheme.colorScheme.onSurface)
             }
 
             Column(
-                modifier            = Modifier.fillMaxWidth().padding(top = 48.dp),
+                modifier            = Modifier.fillMaxWidth().padding(top = 56.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
-                    modifier         = Modifier.size(90.dp).background(Color.White, CircleShape),
+                    modifier         = Modifier.size(90.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(initials, fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                    Text(initials, fontSize = 32.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.surface)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(user?.name ?: "-", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(user?.name ?: "-", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(user?.email ?: "-", fontSize = 14.sp, color = Color(0xFFAAAAAA))
+                Text(user?.email ?: "-", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
-        // ─── Content ─────────────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .offset(y = (-20).dp)
         ) {
-            // Info card
             Card(
-                colors    = CardDefaults.cardColors(containerColor = Color.White),
-                shape     = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
+                colors    = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape     = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     ProfileInfoRow(icon = Icons.Default.Person, label = "Nama",  value = user?.name  ?: "-")
-                    HorizontalDivider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 16.dp))
                     ProfileInfoRow(icon = Icons.Default.Email,  label = "Email", value = user?.email ?: "-")
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // My Orders button
             Card(
                 modifier  = Modifier.fillMaxWidth().clickable { onNavigateToOrders() },
-                colors    = CardDefaults.cardColors(containerColor = Color.White),
-                shape     = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
+                colors    = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape     = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Row(
                     modifier          = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = Color.Black, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
                     Spacer(modifier = Modifier.width(14.dp))
-                    Text("My Orders", color = Color.Black, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+                    Text("My Orders", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Change Password button
             Card(
                 modifier  = Modifier.fillMaxWidth().clickable { showPasswordDialog = true },
-                colors    = CardDefaults.cardColors(containerColor = Color.White),
-                shape     = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
+                colors    = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape     = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Row(
                     modifier          = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Black, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
                     Spacer(modifier = Modifier.width(14.dp))
-                    Text("Ubah Password", color = Color.Black, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+                    Text("Ubah Password", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Logout button
             Button(
                 onClick   = { showLogoutDialog = true },
                 modifier  = Modifier.fillMaxWidth().height(56.dp),
-                colors    = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEEEE)),
-                shape     = RoundedCornerShape(16.dp),
+                colors    = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)
+                ),
+                shape     = RoundedCornerShape(12.dp),
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = Color(0xFFCC3333))
+                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.width(10.dp))
-                Text("Keluar dari Akun", color = Color(0xFFCC3333), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text("Keluar dari Akun", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
     }
 }
 
-// ─── Change Password Dialog ───────────────────────────────────────────────────
 @Composable
 private fun ChangePasswordDialog(
     viewModel: AuthViewModel,
@@ -210,12 +209,12 @@ private fun ChangePasswordDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            colors    = CardDefaults.cardColors(containerColor = Color.White),
-            shape     = RoundedCornerShape(24.dp),
+            colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape     = RoundedCornerShape(12.dp),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Ubah Password", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                Text("Ubah Password", fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -227,11 +226,11 @@ private fun ChangePasswordDialog(
 
                 if (errorMsg != null) {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(errorMsg!!, color = Color(0xFFEF5350), fontSize = 13.sp)
+                    Text(errorMsg!!, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
                 }
                 if (successMsg != null) {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(successMsg!!, color = Color(0xFF4CAF50), fontSize = 13.sp)
+                    Text(successMsg!!, color = Color(0xFF81C784), fontSize = 13.sp)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -240,7 +239,9 @@ private fun ChangePasswordDialog(
                     OutlinedButton(
                         onClick  = onDismiss,
                         modifier = Modifier.weight(1f).height(48.dp),
-                        shape    = RoundedCornerShape(12.dp)
+                        shape    = RoundedCornerShape(12.dp),
+                        colors   = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                        border   = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Text("Batal")
                     }
@@ -258,14 +259,14 @@ private fun ChangePasswordDialog(
                             )
                         },
                         modifier = Modifier.weight(1f).height(48.dp),
-                        colors   = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                        colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape    = RoundedCornerShape(12.dp),
                         enabled  = !isLoading
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         } else {
-                            Text("Simpan", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Simpan", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -282,7 +283,7 @@ private fun PasswordField(
     showPassword:  Boolean,
     onToggleShow:  () -> Unit
 ) {
-    Text(label, fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+    Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
     Spacer(modifier = Modifier.height(6.dp))
     TextField(
         value                = value,
@@ -296,16 +297,18 @@ private fun PasswordField(
                 Icon(
                     imageVector        = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                     contentDescription = null,
-                    tint               = Color.Gray
+                    tint               = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
         colors = TextFieldDefaults.colors(
-            focusedContainerColor   = Color(0xFFF5F5F5),
-            unfocusedContainerColor = Color(0xFFF5F5F5),
+            focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             focusedIndicatorColor   = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            cursorColor             = Color.Black
+            cursorColor             = MaterialTheme.colorScheme.primary,
+            focusedTextColor        = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor      = MaterialTheme.colorScheme.onSurface
         ),
         shape = RoundedCornerShape(12.dp)
     )
@@ -321,12 +324,12 @@ private fun ProfileInfoRow(
         modifier          = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(14.dp))
         Column {
-            Text(label, fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+            Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+            Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

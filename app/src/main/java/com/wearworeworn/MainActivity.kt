@@ -26,6 +26,8 @@ import com.wearworeworn.viewmodel.CartViewModel
 import com.wearworeworn.viewmodel.OrderViewModel
 import com.wearworeworn.viewmodel.ProductViewModel
 
+import com.wearworeworn.ui.theme.WearWoreWornTheme
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +37,7 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            MaterialTheme {
+            WearWoreWornTheme {
                 Surface {
                     AppNavigation()
                 }
@@ -189,8 +191,14 @@ fun AppNavigation() {
 
         composable("myOrders") {
             MyOrdersScreen(
-                orderViewModel  = orderViewModel,
-                onBack          = { navController.popBackStack() },
+                orderViewModel   = orderViewModel,
+                authViewModel    = authViewModel,
+                onBack           = { navController.popBackStack() },
+                onNavigateToHome = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
                 onPendingPayment = { order ->
                     val encodedCreatedAt = java.net.URLEncoder.encode(order.createdAt ?: "", "UTF-8")
                     navController.navigate("checkoutSuccess/${order.id}/${order.totalPrice}?isFromMyOrders=true&createdAt=$encodedCreatedAt")

@@ -36,7 +36,7 @@ fun OrderPaymentScreen(
 
     Scaffold(
         topBar = {
-            Surface(color = Color.White, shadowElevation = 2.dp) {
+            Surface(color = MaterialTheme.colorScheme.background) {
                 Row(
                     modifier          = Modifier
                         .fillMaxWidth()
@@ -45,26 +45,31 @@ fun OrderPaymentScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Kembali",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         "DETAIL PESANAN",
                         fontSize      = 16.sp,
                         fontWeight    = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.sp,
+                        color         = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
         },
-        containerColor = Color(0xFFF8F8F8)
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (isDetailLoading) {
             Box(
                 modifier         = Modifier.fillMaxSize().padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.Black)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(
@@ -76,14 +81,18 @@ fun OrderPaymentScreen(
             ) {
                 OrderDetailView(order = order, detail = detail)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                OutlinedButton(
+                Button(
                     onClick  = onBack,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape    = RoundedCornerShape(16.dp)
+                    shape    = RoundedCornerShape(12.dp),
+                    colors   = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        contentColor   = MaterialTheme.colorScheme.onSurface
+                    )
                 ) {
-                    Text("Kembali ke Pesanan", fontWeight = FontWeight.SemiBold)
+                    Text("Kembali ke Pesanan", fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -92,113 +101,123 @@ fun OrderPaymentScreen(
     }
 }
 
-// ─── Order Detail View (Validated Orders) ────────────────────────────────────
 @Composable
 private fun OrderDetailView(order: Order, detail: OrderDetail?) {
 
     @Composable
     fun SectionTitle(text: String) {
-        Text(text = text, fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.Gray, letterSpacing = 2.sp)
+        Text(
+            text = text,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 1.5.sp
+        )
         Spacer(modifier = Modifier.height(10.dp))
     }
 
-    // ─── Title ───────────────────────────────────────────────────────────
     Text(
-        "ORDER DETAILS",
-        fontSize   = 20.sp,
-        fontWeight = FontWeight.Black
+        "ORDER SUMMARY",
+        fontSize   = 22.sp,
+        fontWeight = FontWeight.Black,
+        color      = MaterialTheme.colorScheme.onSurface,
+        letterSpacing = (-0.5).sp
     )
     Text(
         "#TRX-${order.id.toString().padStart(4, '0')}",
-        fontSize   = 15.sp,
+        fontSize   = 14.sp,
         fontWeight = FontWeight.Bold,
-        color      = Color(0xFF1565C0)
+        color      = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
-    // Status badge
     val statusLabel = when (order.status.lowercase()) {
-        "paid", "lunas"  -> "✓  Sudah Dibayar"
-        "processing"     -> "⚙  Sedang Diproses"
-        "shipped"        -> "🚚  Dalam Pengiriman"
-        "delivered"      -> "✅  Selesai"
-        "cancelled"      -> "✕  Dibatalkan"
-        else             -> order.status
+        "paid", "lunas"  -> "PAID"
+        "processing"     -> "PROCESSING"
+        "shipped"        -> "SHIPPED"
+        "delivered"      -> "DELIVERED"
+        "cancelled"      -> "CANCELLED"
+        else             -> order.status.uppercase()
     }
-    val statusColor = when (order.status.lowercase()) {
-        "paid", "lunas"  -> Color(0xFF4CAF50)
-        "shipped"        -> Color(0xFF2196F3)
-        "delivered"      -> Color(0xFF4CAF50)
-        "cancelled"      -> Color(0xFFEF5350)
-        else             -> Color.Gray
+    val (statusBg, statusText) = when (order.status.lowercase()) {
+        "paid", "lunas", "delivered" -> Color(0xFF0A2E14) to Color(0xFF81C784)
+        "shipped"                    -> Color(0xFF0D2137) to Color(0xFF64B5F6)
+        "cancelled"                  -> Color(0xFF2E0D0D) to Color(0xFFE57373)
+        "processing"                 -> Color(0xFF2E1A00) to Color(0xFFFFB74D)
+        else                         -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
-    Spacer(modifier = Modifier.height(8.dp))
-    Surface(color = statusColor.copy(alpha = 0.12f), shape = RoundedCornerShape(20.dp)) {
+    Spacer(modifier = Modifier.height(12.dp))
+    Surface(color = statusBg.copy(alpha = 0.8f), shape = RoundedCornerShape(12.dp)) {
         Text(
             statusLabel,
-            color      = statusColor,
-            fontSize   = 12.sp,
-            fontWeight = FontWeight.Bold,
-            modifier   = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+            color      = statusText,
+            fontSize   = 11.sp,
+            fontWeight = FontWeight.Black,
+            modifier   = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            letterSpacing = 1.sp
         )
     }
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(24.dp))
 
-    // ─── Shipping Information ─────────────────────────────────────────────
     Card(
         modifier  = Modifier.fillMaxWidth(),
-        colors    = CardDefaults.cardColors(containerColor = Color.White),
-        shape     = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors    = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            contentColor   = MaterialTheme.colorScheme.onSurface
+        ),
+        shape     = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             SectionTitle("SHIPPING INFORMATION")
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("RECEIVER NAME", fontSize = 10.sp, color = Color.Gray, letterSpacing = 1.sp)
+                    Text("RECEIVER", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(detail?.recipientName ?: "-", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("PHONE NUMBER", fontSize = 10.sp, color = Color.Gray, letterSpacing = 1.sp)
+                    Text("PHONE", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(detail?.phone ?: "-", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
-            Text("DELIVERY ADDRESS", fontSize = 10.sp, color = Color.Gray, letterSpacing = 1.sp)
+            Text("ADDRESS", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(detail?.deliveryAddress ?: "-", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(detail?.deliveryAddress ?: "-", fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp)
 
             Spacer(modifier = Modifier.height(14.dp))
-            Text("SHIPPING COURIER", fontSize = 10.sp, color = Color.Gray, letterSpacing = 1.sp)
+            Text("COURIER", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
             if (!detail?.courier.isNullOrBlank() && detail?.courier != "-") {
-                Surface(color = Color(0xFF1A3A6B), shape = RoundedCornerShape(8.dp)) {
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                     Text(
                         detail!!.courier.uppercase(),
-                        fontSize   = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color      = Color(0xFF4A90D9),
+                        fontSize   = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        color      = MaterialTheme.colorScheme.onSurface,
                         modifier   = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             } else {
-                Text("-", fontSize = 14.sp, color = Color.DarkGray)
+                Text("-", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    // ─── Item List ────────────────────────────────────────────────────────
     Card(
         modifier  = Modifier.fillMaxWidth(),
-        colors    = CardDefaults.cardColors(containerColor = Color.White),
-        shape     = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors    = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            contentColor   = MaterialTheme.colorScheme.onSurface
+        ),
+        shape     = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             SectionTitle("ITEM LIST")
@@ -206,46 +225,47 @@ private fun OrderDetailView(order: Order, detail: OrderDetail?) {
             if (detail != null && detail.items.isNotEmpty()) {
                 detail.items.forEach { item ->
                     Row(
-                        modifier              = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        modifier              = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Text(item.productName, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                            if (item.size != null) {
-                                Text(" (${item.size})", fontSize = 12.sp, color = Color.Gray)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(item.productName, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (item.size != null) {
+                                    Text("SIZE: ${item.size}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                                    Text("  •  ", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Text(
+                                    "QTY: ${item.quantity}",
+                                    fontSize   = 11.sp,
+                                    color      = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
-                            Text(
-                                " x${item.quantity}",
-                                fontSize   = 12.sp,
-                                color      = Color(0xFF1565C0),
-                                fontWeight = FontWeight.Bold
-                            )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             Formatter.formatRupiah(
                                 item.subtotal.takeIf { it > 0 } ?: (item.price * item.quantity)
                             ),
                             fontSize   = 14.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Black
                         )
                     }
                     if (detail.items.last() != item) {
-                        HorizontalDivider(color = Color(0xFFF5F5F5))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), modifier = Modifier.padding(vertical = 4.dp))
                     }
                 }
             } else {
-                // Fallback jika API tidak mengembalikan items
                 Row(
                     modifier              = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Produk", fontSize = 14.sp, color = Color.DarkGray)
+                    Text("Produk", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
                         Formatter.formatRupiah(detail?.productSubtotal ?: order.totalPrice),
                         fontSize   = 14.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Black
                     )
                 }
             }
@@ -254,12 +274,14 @@ private fun OrderDetailView(order: Order, detail: OrderDetail?) {
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    // ─── Payment Details ──────────────────────────────────────────────────
     Card(
         modifier  = Modifier.fillMaxWidth(),
-        colors    = CardDefaults.cardColors(containerColor = Color.White),
-        shape     = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors    = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            contentColor   = MaterialTheme.colorScheme.onSurface
+        ),
+        shape     = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             SectionTitle("PAYMENT DETAILS")
@@ -269,23 +291,23 @@ private fun OrderDetailView(order: Order, detail: OrderDetail?) {
             val shippingFee = detail?.shippingFee ?: 0.0
             val insurance   = detail?.shippingInsurance ?: 0.0
 
-            PaymentDetailRow("Product Subtotal",  subtotal)
-            PaymentDetailRow("Shipping Fee",       shippingFee)
-            PaymentDetailRow("Shipping Insurance", insurance)
+            PaymentDetailRow("Subtotal",  subtotal)
+            PaymentDetailRow("Shipping",       shippingFee)
+            PaymentDetailRow("Insurance", insurance)
 
-            HorizontalDivider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(vertical = 10.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 12.dp))
 
             Row(
                 modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment     = Alignment.CenterVertically
             ) {
-                Text("GRAND TOTAL", fontSize = 14.sp, fontWeight = FontWeight.Black)
+                Text("GRAND TOTAL", fontSize = 14.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                 Text(
                     Formatter.formatRupiah(order.totalPrice),
-                    fontSize   = 16.sp,
+                    fontSize   = 18.sp,
                     fontWeight = FontWeight.Black,
-                    color      = Color(0xFF1565C0)
+                    color      = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -298,7 +320,7 @@ private fun PaymentDetailRow(label: String, amount: Double) {
         modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 13.sp, color = Color.Gray)
-        Text(Formatter.formatRupiah(amount), fontSize = 13.sp)
+        Text(label, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(Formatter.formatRupiah(amount), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }

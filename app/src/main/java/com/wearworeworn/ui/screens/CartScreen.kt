@@ -44,33 +44,36 @@ fun CartScreen(
 
     Scaffold(
         modifier       = Modifier.fillMaxSize(),
-        containerColor = Color(0xFFF8F8F8),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Surface(
                 modifier        = Modifier.statusBarsPadding(),
-                color           = Color.White,
-                shadowElevation = 2.dp
+                color           = MaterialTheme.colorScheme.background,
+                shadowElevation = 0.dp
             ) {
                 Row(
                     modifier          = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = MaterialTheme.colorScheme.onBackground)
                     }
                     Text(
-                        text       = "Keranjang",
+                        text       = "KERANJANG",
                         fontWeight = FontWeight.Black,
                         fontSize   = 20.sp,
-                        modifier   = Modifier.padding(start = 8.dp)
+                        letterSpacing = 1.sp,
+                        modifier   = Modifier.padding(start = 8.dp),
+                        color      = MaterialTheme.colorScheme.onBackground
                     )
                     if (items.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(color = Color.Black, shape = RoundedCornerShape(12.dp)) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Surface(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(12.dp)) {
                             Text(
-                                text     = "${items.size} item",
-                                color    = Color.White,
-                                fontSize = 12.sp,
+                                text     = "${items.size} ITEMS",
+                                color    = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
@@ -82,8 +85,8 @@ fun CartScreen(
             if (items.isNotEmpty()) {
                 Surface(
                     modifier        = Modifier.navigationBarsPadding().fillMaxWidth(),
-                    color           = Color.White,
-                    shadowElevation = 16.dp
+                    color           = MaterialTheme.colorScheme.background,
+                    shadowElevation = 0.dp
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
                         Row(
@@ -91,24 +94,27 @@ fun CartScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment     = Alignment.CenterVertically
                         ) {
-                            Text("Total", color = Color.Gray, fontSize = 14.sp)
+                            Text("TOTAL", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                             Text(
                                 text       = Formatter.formatRupiah(total),
                                 fontSize   = 22.sp,
                                 fontWeight = FontWeight.Black,
-                                color      = Color.Black
+                                color      = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick  = onCheckout,
                             modifier = Modifier.fillMaxWidth().height(56.dp),
-                            colors   = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                            shape    = RoundedCornerShape(16.dp)
+                            colors   = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            shape    = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.ShoppingCartCheckout, contentDescription = null, tint = Color.White)
+                            Icon(Icons.Default.ShoppingCartCheckout, contentDescription = null)
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("CHECKOUT", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                            Text("PROSES CHECKOUT", fontWeight = FontWeight.Black, letterSpacing = 1.5.sp)
                         }
                     }
                 }
@@ -118,22 +124,39 @@ fun CartScreen(
         when {
             isLoading -> {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Black)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             items.isEmpty() -> {
                 Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
                         Text("🛒", fontSize = 64.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Keranjangmu masih kosong", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "KERANJANGMU KOSONG",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Belum ada produk yang kamu tambahkan.",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
                         Button(
                             onClick = onBack,
-                            colors  = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                            shape   = RoundedCornerShape(14.dp)
+                            colors  = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            shape   = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().height(52.dp)
                         ) {
-                            Text("Belanja Sekarang", color = Color.White)
+                            Text("MULAI BELANJA", fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                         }
                     }
                 }
@@ -169,9 +192,11 @@ private fun CartItemRow(
 
     Card(
         modifier  = Modifier.fillMaxWidth(),
-        colors    = CardDefaults.cardColors(containerColor = Color.White),
-        shape     = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(1.dp)
+        colors    = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape     = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
@@ -183,38 +208,56 @@ private fun CartItemRow(
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text       = cartItem.product.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize   = 14.sp,
+                    text       = cartItem.product.name.uppercase(),
+                    fontWeight = FontWeight.Black,
+                    fontSize   = 13.sp,
                     maxLines   = 2,
-                    overflow   = TextOverflow.Ellipsis
+                    overflow   = TextOverflow.Ellipsis,
+                    letterSpacing = 0.5.sp,
+                    color      = MaterialTheme.colorScheme.onSurface
                 )
-                Text(text = "Size: ${cartItem.variant.size?.name ?: "-"}", fontSize = 12.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = Formatter.formatRupiah(cartItem.subtotal), fontWeight = FontWeight.Black, fontSize = 15.sp)
+                Text(
+                    text = "SIZE: ${cartItem.variant.size?.name?.uppercase() ?: "-"}",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = Formatter.formatRupiah(cartItem.subtotal),
+                    fontWeight = FontWeight.Black,
+                    fontSize   = 16.sp,
+                    color      = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier          = Modifier.background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)).padding(2.dp)
+                    modifier          = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(12.dp)
+                        )
+                        .padding(2.dp)
                 ) {
                     IconButton(
                         onClick  = { if (cartItem.quantity > 1) onUpdateQuantity(cartItem.quantity - 1) },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Remove, contentDescription = "Kurangi", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(
                         text       = cartItem.quantity.toString(),
-                        modifier   = Modifier.width(30.dp),
+                        modifier   = Modifier.width(36.dp),
                         textAlign  = TextAlign.Center,
                         fontWeight = FontWeight.Bold,
-                        fontSize   = 13.sp
+                        fontSize   = 14.sp,
+                        color      = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     IconButton(
                         onClick  = { onUpdateQuantity(cartItem.quantity + 1) },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

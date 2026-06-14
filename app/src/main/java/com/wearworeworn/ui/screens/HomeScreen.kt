@@ -1,6 +1,8 @@
 package com.wearworeworn.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -14,17 +16,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wearworeworn.R
 import com.wearworeworn.ui.components.ProductCard
 import com.wearworeworn.viewmodel.AuthViewModel
 import com.wearworeworn.viewmodel.CartViewModel
@@ -60,7 +66,7 @@ fun HomeScreen(
         topBar   = {
             Surface(
                 modifier        = Modifier.statusBarsPadding(),
-                color           = Color.White,
+                color           = MaterialTheme.colorScheme.background,
                 shadowElevation = 0.dp
             ) {
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
@@ -69,20 +75,22 @@ fun HomeScreen(
                         verticalAlignment     = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text          = "WearWoreWorn",
-                            fontWeight    = FontWeight.Black,
-                            fontSize      = 22.sp,
-                            letterSpacing = (-1).sp
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_www),
+                            contentDescription = "WearWoreWorn Logo",
+                            modifier = Modifier
+                                .height(32.dp)
+                                .widthIn(max = 160.dp),
+                            contentScale = ContentScale.Fit
                         )
                         Row {
                             BadgedBox(
                                 badge = {
                                     if (cartViewModel.totalItems > 0) {
-                                        Badge(containerColor = Color.Black) {
+                                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
                                             Text(
                                                 "${cartViewModel.totalItems}",
-                                                color    = Color.White,
+                                                color    = MaterialTheme.colorScheme.onPrimary,
                                                 fontSize = 10.sp
                                             )
                                         }
@@ -102,9 +110,9 @@ fun HomeScreen(
                                 if (isLoggedIn) onNavigateToProfile() else onNavigateToLogin()
                             }) {
                                 if (isLoggedIn) {
-                                    Icon(Icons.Default.AccountCircle, contentDescription = "Profil", tint = Color.Black)
+                                    Icon(Icons.Default.AccountCircle, contentDescription = "Profil", tint = MaterialTheme.colorScheme.onBackground)
                                 } else {
-                                    Icon(Icons.Default.AccountCircle, contentDescription = "Masuk", tint = Color.Gray)
+                                    Icon(Icons.Default.AccountCircle, contentDescription = "Login", tint = MaterialTheme.colorScheme.outline)
                                 }
                             }
                         }
@@ -115,13 +123,13 @@ fun HomeScreen(
                             value         = viewModel.searchQuery.value,
                             onValueChange = { viewModel.searchQuery.value = it },
                             modifier      = Modifier.fillMaxWidth().height(56.dp),
-                            placeholder   = { Text("Cari produk...", color = Color.Gray, fontSize = 14.sp) },
+                            placeholder   = { Text("Cari produk...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 14.sp) },
                             leadingIcon   = {
                                 Icon(
-                                    Icons.Default.Search,
+                                    Icons.Outlined.Search,
                                     contentDescription = null,
-                                    tint     = if (viewModel.searchQuery.value.isEmpty()) Color.Gray else Color.Black,
-                                    modifier = Modifier.size(22.dp)
+                                    tint     = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
                             trailingIcon  = {
@@ -130,20 +138,23 @@ fun HomeScreen(
                                         viewModel.searchQuery.value = ""
                                         focusManager.clearFocus()
                                     }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Hapus", modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Close, contentDescription = "Hapus", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             },
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor   = Color(0xFFF1F1F1),
-                                unfocusedContainerColor = Color(0xFFF1F1F1),
+                                focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                 focusedIndicatorColor   = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor             = Color.Black
+                                disabledIndicatorColor  = Color.Transparent,
+                                cursorColor             = MaterialTheme.colorScheme.primary,
+                                focusedTextColor        = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor      = MaterialTheme.colorScheme.onSurface
                             ),
-                            shape           = RoundedCornerShape(16.dp),
+                            shape           = RoundedCornerShape(12.dp),
                             singleLine      = true,
-                            textStyle       = LocalTextStyle.current.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium),
+                            textStyle       = LocalTextStyle.current.copy(fontSize = 14.sp, fontWeight = FontWeight.Normal),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                             keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
                         )
@@ -157,27 +168,27 @@ fun HomeScreen(
                     focusManager.clearFocus()
                     showFilterSheet = true
                 },
-                color         = Color.Black,
-                shape         = RoundedCornerShape(16.dp),
-                shadowElevation = 8.dp
+                color         = MaterialTheme.colorScheme.primary,
+                shape         = RoundedCornerShape(12.dp),
+                shadowElevation = 0.dp
             ) {
                 Row(
                     modifier              = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.FilterList, contentDescription = null, tint = Color.White)
+                    Icon(Icons.Default.FilterList, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("FILTER", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Text("FILTER", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
                     
                     val activeFilters = viewModel.selectedCategories.size + viewModel.selectedSizes.size +
                         (if (viewModel.selectedPriceRange.value != null) 1 else 0)
                     if (activeFilters > 0) {
                         Spacer(modifier = Modifier.width(8.dp))
-                        Surface(color = Color.White, shape = RoundedCornerShape(8.dp)) {
+                        Surface(color = MaterialTheme.colorScheme.onPrimary, shape = RoundedCornerShape(8.dp)) {
                             Text(
                                 "$activeFilters",
-                                color    = Color.Black,
+                                color    = MaterialTheme.colorScheme.primary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Black,
                                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
@@ -189,43 +200,80 @@ fun HomeScreen(
         }
     ) { innerPadding ->
         LazyVerticalGrid(
-            columns      = GridCells.Fixed(2),
-            modifier     = Modifier.fillMaxSize().padding(horizontal = 8.dp).clickable { focusManager.clearFocus() },
-            contentPadding = PaddingValues(
+            columns               = GridCells.Fixed(2),
+            modifier              = Modifier.fillMaxSize().padding(horizontal = 12.dp).clickable { focusManager.clearFocus() },
+            contentPadding        = PaddingValues(
                 top    = innerPadding.calculateTopPadding() + 8.dp,
                 bottom = innerPadding.calculateBottomPadding() + 80.dp
-            )
+            ),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement   = Arrangement.spacedBy(12.dp)
         ) {
-            item(span = { GridItemSpan(2) }) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-                    shape    = RoundedCornerShape(24.dp),
-                    colors   = CardDefaults.cardColors(containerColor = Color(0xFF212121))
-                ) {
-                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text       = "Find Your Best Style",
-                            color      = Color.White,
-                            fontSize   = 24.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            textAlign  = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text      = "Explore the latest trends in teen & adult outfits.",
-                            color     = Color.LightGray,
-                            fontSize  = 14.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        if (!isLoggedIn) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(
-                                onClick = onNavigateToLogin,
-                                border  = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
-                                shape   = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Masuk untuk Belanja", color = Color.White, fontSize = 13.sp)
+            if (viewModel.searchQuery.value.isEmpty()) {
+                item(span = { GridItemSpan(2) }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        shape    = RoundedCornerShape(12.dp),
+                        colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(if (isLoggedIn) 20.dp else 24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            if (isLoggedIn) {
+                                val firstName = authViewModel.currentUser.value?.name?.split(" ")?.firstOrNull() ?: ""
+                                Text(
+                                    text       = "HALO, ${firstName.uppercase()}!",
+                                    color      = MaterialTheme.colorScheme.onSurface,
+                                    fontSize   = 18.sp,
+                                    fontWeight = FontWeight.Black,
+                                    textAlign  = TextAlign.Center,
+                                    letterSpacing = 1.5.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text      = "Temukan koleksi pilihan untuk gaya terbaikmu hari ini.",
+                                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize  = 13.sp,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            } else {
+                                Text(
+                                    text       = "WEARWOREWORN",
+                                    color      = MaterialTheme.colorScheme.onSurface,
+                                    fontSize   = 22.sp,
+                                    fontWeight = FontWeight.Black,
+                                    textAlign  = TextAlign.Center,
+                                    letterSpacing = 0.5.sp
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text      = "Login untuk mengakses koleksi eksklusif dan mulai belanja produk favoritmu.",
+                                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize  = 14.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(20.dp))
+                                Button(
+                                    onClick = onNavigateToLogin,
+                                    modifier = Modifier.height(44.dp),
+                                    shape   = RoundedCornerShape(12.dp),
+                                    colors  = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text("LOGIN SEKARANG", fontWeight = FontWeight.Black, fontSize = 13.sp, letterSpacing = 1.sp)
+                                }
                             }
                         }
                     }
@@ -239,9 +287,15 @@ fun HomeScreen(
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Katalog Produk", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(
+                            text       = if (viewModel.searchQuery.value.isEmpty()) "CATALOGUE" else "SEARCH RESULTS",
+                            fontWeight = FontWeight.Black,
+                            fontSize   = 16.sp,
+                            color      = MaterialTheme.colorScheme.onBackground,
+                            letterSpacing = 1.sp
+                        )
                         if (products.isNotEmpty()) {
-                            Text("${products.size} produk", fontSize = 12.sp, color = Color.Gray)
+                            Text("${products.size} ITEMS FOUND", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -251,27 +305,29 @@ fun HomeScreen(
                                 focusManager.clearFocus()
                                 showSortMenu = true
                             },
-                            color = Color(0xFFF5F5F5),
-                            shape = RoundedCornerShape(8.dp)
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    viewModel.selectedSortOption.value,
-                                    fontSize   = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color      = if (viewModel.selectedSortOption.value == "SORT BY") Color.Gray else Color.Black
+                                    viewModel.selectedSortOption.value.uppercase(),
+                                    fontSize   = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color      = MaterialTheme.colorScheme.onSurface,
+                                    letterSpacing = 0.5.sp
                                 )
-                                Icon(Icons.Default.KeyboardArrowDown, null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.Default.KeyboardArrowDown, null, modifier = Modifier.size(16.dp))
                             }
                         }
                         DropdownMenu(
                             expanded         = showSortMenu,
                             onDismissRequest = { showSortMenu = false },
-                            modifier         = Modifier.background(Color.White).width(160.dp)
+                            modifier         = Modifier.background(MaterialTheme.colorScheme.surfaceVariant).width(160.dp)
                         ) {
                             sortOptions.forEach { option ->
                                 DropdownMenuItem(
-                                    text    = { Text(option, fontSize = 14.sp) },
+                                    text    = { Text(option.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                                     onClick = { viewModel.selectedSortOption.value = option; showSortMenu = false }
                                 )
                             }
@@ -283,7 +339,7 @@ fun HomeScreen(
             if (isLoading) {
                 item(span = { GridItemSpan(2) }) {
                     Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color.Black)
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
             } else if (errorMessage != null) {
@@ -292,24 +348,41 @@ fun HomeScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = Color.Red, modifier = Modifier.size(48.dp))
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(errorMessage, color = Color.Gray, fontSize = 14.sp, textAlign = TextAlign.Center)
+                            Text(errorMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, textAlign = TextAlign.Center)
                             Spacer(modifier = Modifier.height(24.dp))
                             Button(
                                 onClick = { viewModel.refreshData() },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                                shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Coba Lagi", color = Color.White)
+                                Text("TRY AGAIN", fontWeight = FontWeight.Black)
                             }
                         }
                     }
                 }
             } else if (products.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
-                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("🔍", fontSize = 40.sp)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text("Produk tidak ditemukan", color = Color.Gray, fontSize = 14.sp)
+                            Text("🔍", fontSize = 48.sp)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("NO PRODUCTS FOUND", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground, fontSize = 16.sp, letterSpacing = 1.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Try searching with different keywords or resetting filters.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, textAlign = TextAlign.Center)
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.searchQuery.value = ""
+                                    viewModel.resetFilters()
+                                    viewModel.refreshData()
+                                    focusManager.clearFocus()
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text("RESET FILTERS", fontWeight = FontWeight.Black)
+                            }
                         }
                     }
                 }
@@ -327,7 +400,8 @@ fun HomeScreen(
             ModalBottomSheet(
                 onDismissRequest = { showFilterSheet = false },
                 sheetState       = sheetState,
-                containerColor   = Color(0xFF1A232E)
+                containerColor   = MaterialTheme.colorScheme.surface,
+                dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)) }
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).verticalScroll(rememberScrollState())
@@ -337,14 +411,16 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        Text("FILTER", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black)
+                        Text("FILTERS", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                         TextButton(onClick = { viewModel.resetFilters() }) {
-                            Text("Reset", color = Color.Red)
+                            Text("RESET ALL", color = Color(0xFFE57373), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    Text("KATEGORI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("CATEGORY", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = 12.sp, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     FlowRow(
                         modifier              = Modifier.fillMaxWidth(),
@@ -355,17 +431,22 @@ fun HomeScreen(
                             val isSelected = viewModel.selectedCategories.contains(category.id)
                             Surface(
                                 modifier = Modifier.clickable { viewModel.toggleCategory(category.id) },
-                                color    = if (isSelected) Color(0xFF2D3848) else Color.Transparent,
-                                border   = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) Color.White else Color.Gray),
-                                shape    = RoundedCornerShape(4.dp)
+                                color    = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                shape    = RoundedCornerShape(if (isSelected) 12.dp else 8.dp)
                             ) {
-                                Text(category.name, color = Color.White, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), fontSize = 12.sp)
+                                Text(
+                                    category.name.uppercase(),
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("UKURAN", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("SIZE", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = 12.sp, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     FlowRow(
                         modifier              = Modifier.fillMaxWidth(),
@@ -376,17 +457,22 @@ fun HomeScreen(
                             val isSelected = viewModel.selectedSizes.contains(size.id)
                             Surface(
                                 modifier = Modifier.clickable { viewModel.toggleSize(size.id) },
-                                color    = if (isSelected) Color(0xFF2D3848) else Color.Transparent,
-                                border   = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) Color.White else Color.Gray),
-                                shape    = RoundedCornerShape(4.dp)
+                                color    = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                shape    = RoundedCornerShape(if (isSelected) 12.dp else 8.dp)
                             ) {
-                                Text(size.name, color = Color.White, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), fontSize = 12.sp)
+                                Text(
+                                    size.name.uppercase(),
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("RANGE HARGA", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("PRICE RANGE", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = 12.sp, letterSpacing = 1.sp)
                     Column(modifier = Modifier.padding(top = 8.dp)) {
                         listOf("< Rp 100.000", "Rp 100.000 - Rp 500.000", "> Rp 500.000").forEach { range ->
                             Row(
@@ -396,9 +482,13 @@ fun HomeScreen(
                                 RadioButton(
                                     selected = viewModel.selectedPriceRange.value == range,
                                     onClick  = { viewModel.setPriceRange(range) },
-                                    colors   = RadioButtonDefaults.colors(selectedColor = Color.White, unselectedColor = Color.White)
+                                    modifier = Modifier.size(24.dp),
+                                    colors   = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colorScheme.primary,
+                                        unselectedColor = MaterialTheme.colorScheme.outline
+                                    )
                                 )
-                                Text(range, color = Color.White, fontSize = 14.sp)
+                                Text(range, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
                         }
                     }
@@ -407,10 +497,10 @@ fun HomeScreen(
                     Button(
                         onClick  = { showFilterSheet = false },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors   = ButtonDefaults.buttonColors(containerColor = Color.White),
-                        shape    = RoundedCornerShape(16.dp)
+                        colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape    = RoundedCornerShape(12.dp)
                     ) {
-                        Text("TERAPKAN FILTER", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text("APPLY FILTERS", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }

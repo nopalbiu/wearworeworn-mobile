@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wearworeworn.util.Formatter
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -32,13 +33,12 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Menghitung sisa detik dari deadline pembayaran (24 jam setelah created_at).
- * Jika createdAt kosong/null atau gagal di-parse, fallback ke 24 jam penuh.
+ * Jika createdAt kosongnull atau gagal di-parse, fallback ke 24 jam penuh.
  */
 private fun calculateRemainingSeconds(createdAt: String?): Long {
     if (createdAt.isNullOrBlank()) return 24 * 3600L
 
     return try {
-        // Format dari Laravel: "2026-06-14T10:00:00.000000Z" atau "2026-06-14 10:00:00"
         val format = if (createdAt.contains("T")) {
             SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         } else {
@@ -48,16 +48,16 @@ private fun calculateRemainingSeconds(createdAt: String?): Long {
 
         val orderTime = format.parse(createdAt)
         if (orderTime != null) {
-            val deadlineMs = orderTime.time + (24 * 3600 * 1000L) // 24 jam setelah order dibuat
+            val deadlineMs = orderTime.time + (24 * 3600 * 1000L)
             val nowMs = System.currentTimeMillis()
             val remainingMs = deadlineMs - nowMs
             if (remainingMs > 0) (remainingMs / 1000).coerceAtMost(24 * 3600L) else 0L
         } else {
-            24 * 3600L // fallback
+            24 * 3600L
         }
     } catch (e: Exception) {
         Log.e("CheckoutSuccess", "Failed to parse createdAt: $createdAt", e)
-        24 * 3600L // fallback
+        24 * 3600L
     }
 }
 
@@ -71,8 +71,9 @@ fun CheckoutSuccessScreen(
 ) {
     val context          = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope            = rememberCoroutineScope()
 
-    // Hitung sisa waktu berdasarkan created_at dari server
     var remainingSeconds by remember(createdAt) {
         mutableStateOf(calculateRemainingSeconds(createdAt))
     }
@@ -94,7 +95,8 @@ fun CheckoutSuccessScreen(
     val bankName = "BCA"
 
     Scaffold(
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -107,41 +109,43 @@ fun CheckoutSuccessScreen(
             Icon(
                 Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = Color(0xFF4CAF50),
+                tint = Color(0xFF81C784),
                 modifier = Modifier.size(80.dp)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                "Pesanan Berhasil!",
+                "PESANAN BERHASIL!",
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                color = MaterialTheme.colorScheme.onBackground
             )
             
             Text(
                 "Segera lakukan pembayaran sebelum waktu habis",
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Batas Waktu Pembayaran", fontSize = 12.sp, color = Color(0xFFE65100))
+                    Text("BATAS WAKTU PEMBAYARAN", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f))
                     Text(
                         timerText,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Black,
-                        color = Color(0xFFE65100)
+                        color = Color.White
                     )
                 }
             }
@@ -150,23 +154,43 @@ fun CheckoutSuccessScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                shape = RoundedCornerShape(16.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Detail Pembayaran", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "DETAIL PEMBAYARAN",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 14.sp,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Total Tagihan", color = Color.Gray)
-                        Text(Formatter.formatRupiah(totalPrice), fontWeight = FontWeight.Bold)
+                        Text("TOTAL TAGIHAN", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            Formatter.formatRupiah(totalPrice),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                     
-                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                    HorizontalDivider(
+                        Modifier.padding(vertical = 12.dp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
                     
-                    Text("Transfer ke Rekening:", color = Color.Gray, fontSize = 12.sp)
+                    Text("TRANSFER KE REKENING:", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, fontSize = 11.sp, letterSpacing = 0.5.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("$bankName - $accountHolder", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "$bankName - $accountHolder".uppercase(),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -175,14 +199,26 @@ fun CheckoutSuccessScreen(
                     ) {
                         Text(
                             accountNumber,
-                            fontSize = 22.sp,
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
+                            letterSpacing = 2.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         IconButton(onClick = {
                             clipboardManager.setText(AnnotatedString(accountNumber))
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Nomor rekening berhasil disalin",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
                         }) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Salin", modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = "Salin",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
@@ -194,15 +230,15 @@ fun CheckoutSuccessScreen(
                 onClick = {
                     val message = "Halo Admin WearWoreWorn, saya ingin konfirmasi pembayaran untuk Order #$orderId sebesar ${Formatter.formatRupiah(totalPrice)}."
                     val intent = Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse("https://api.whatsapp.com/send?phone=6281234567890&text=${Uri.encode(message)}")
+                        data = Uri.parse("https://wa.me/6285877639320?text=${Uri.encode(message)}")
                     }
                     context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Konfirmasi via WhatsApp", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("KONFIRMASI VIA WHATSAPP", color = Color.White, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -210,17 +246,35 @@ fun CheckoutSuccessScreen(
             OutlinedButton(
                 onClick  = onBack,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape    = RoundedCornerShape(16.dp),
-                border   = BorderStroke(1.dp, Color.Black)
+                shape    = RoundedCornerShape(12.dp),
+                border   = BorderStroke(1.5.dp, MaterialTheme.colorScheme.onSurface)
             ) {
                 if (isFromMyOrders) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.Black)
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Kembali ke Pesanan", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(
+                        "KEMBALI KE PESANAN",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
                 } else {
-                    Icon(Icons.Default.Home, contentDescription = null, tint = Color.Black)
+                    Icon(
+                        Icons.Default.Home,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Kembali ke Beranda", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(
+                        "KEMBALI KE BERANDA",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
                 }
             }
         }

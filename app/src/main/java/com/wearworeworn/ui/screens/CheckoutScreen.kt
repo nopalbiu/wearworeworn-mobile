@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +52,34 @@ fun CheckoutScreen(
     var shippingAddress by remember { mutableStateOf("") }
     var phone           by remember { mutableStateOf("") }
     var note            by remember { mutableStateOf("") }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var addressError by remember { mutableStateOf<String?>(null) }
+
+    var nameTouched by remember { mutableStateOf(false) }
+    var phoneTouched by remember { mutableStateOf(false) }
+    var addressTouched by remember { mutableStateOf(false) }
+
+    fun validateName(value: String) {
+        nameError = if (value.isBlank()) "Nama Penerima wajib diisi" else null
+    }
+
+    fun validatePhone(value: String) {
+        phoneError = when {
+            value.isBlank() -> "Nomor HP wajib diisi"
+            !value.all { it.isDigit() } -> "Nomor HP hanya boleh berisi angka"
+            value.length < 9 -> "Nomor HP minimal 9 digit"
+            else -> null
+        }
+    }
+
+    fun validateAddress(value: String) {
+        addressError = when {
+            value.isBlank() -> "Alamat Lengkap wajib diisi"
+            value.length < 10 -> "Alamat Lengkap minimal 10 karakter"
+            else -> null
+        }
+    }
     
     val couriers = listOf("JNE", "J&T", "SiCepat")
     var selectedCourier by remember { mutableStateOf(couriers[0]) }
@@ -78,9 +107,13 @@ fun CheckoutScreen(
 
     Scaffold(
         modifier       = Modifier.fillMaxSize(),
-        containerColor = Color(0xFFF8F8F8),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Surface(modifier = Modifier.statusBarsPadding(), color = Color.White, shadowElevation = 2.dp) {
+            Surface(
+                modifier = Modifier.statusBarsPadding(),
+                color = MaterialTheme.colorScheme.background,
+                shadowElevation = 0.dp
+            ) {
                 Row(
                     modifier          = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -89,29 +122,274 @@ fun CheckoutScreen(
                         cartViewModel.clearDirectBuy()
                         onBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = MaterialTheme.colorScheme.onSurface)
                     }
-                    Text("Checkout", fontWeight = FontWeight.Black, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
+                    Text("CHECKOUT", fontWeight = FontWeight.Black, fontSize = 20.sp, letterSpacing = 1.sp, modifier = Modifier.padding(start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
                 }
             }
-        },
-        bottomBar = {
-            Surface(modifier = Modifier.navigationBarsPadding().fillMaxWidth(), color = Color.White, shadowElevation = 16.dp) {
-                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+            Card(
+                colors    = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape     = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("RINGKASAN PESANAN", fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    items.forEach { item ->
+                        Row(
+                            modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text     = "${item.product.name.uppercase()} (${item.variant.size?.name?.uppercase() ?: "-"}) ×${item.quantity}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text       = Formatter.formatRupiah(item.subtotal),
+                                fontSize   = 13.sp,
+                                fontWeight = FontWeight.Black,
+                                color      = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                    
+                    Row(
+                        modifier              = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("ONGKOS KIRIM ($selectedCourier)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(Formatter.formatRupiah(shippingFee), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Row(
+                        modifier              = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("BIAYA ADMIN", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(Formatter.formatRupiah(adminFee), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                    
+                    Row(
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("TOTAL PESANAN", fontWeight = FontWeight.Black, fontSize = 14.sp, letterSpacing = 0.5.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text(Formatter.formatRupiah(grandTotal), fontWeight = FontWeight.Black, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
+
+            Text("DATA PENGIRIMAN", fontWeight = FontWeight.Black, fontSize = 16.sp, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onBackground)
+
+            val fieldColors = TextFieldDefaults.colors(
+                focusedContainerColor     = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                unfocusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                focusedIndicatorColor     = Color.Transparent,
+                unfocusedIndicatorColor   = Color.Transparent,
+                cursorColor               = MaterialTheme.colorScheme.primary,
+                focusedTextColor          = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor        = MaterialTheme.colorScheme.onSurface,
+                focusedLabelColor         = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor       = MaterialTheme.colorScheme.onSurfaceVariant,
+                errorContainerColor       = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+
+            Column {
+                TextField(
+                    value         = recipientName,
+                    onValueChange = { 
+                        recipientName = it
+                        if (nameTouched) validateName(it)
+                    },
+                    modifier      = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { 
+                            if (!it.isFocused && (nameTouched || recipientName.isNotEmpty())) {
+                                nameTouched = true
+                                validateName(recipientName)
+                            }
+                        },
+                    label         = { Text("Nama Penerima*") },
+                    leadingIcon   = { Icon(Icons.Default.Person, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    colors        = fieldColors,
+                    singleLine    = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) }),
+                    isError = nameTouched && nameError != null,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                if (nameTouched && nameError != null) {
+                    Text(
+                        text = nameError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                    )
+                }
+            }
+
+            Column {
+                TextField(
+                    value         = phone,
+                    onValueChange = { 
+                        if (it.all { char -> char.isDigit() }) {
+                            phone = it
+                            if (phoneTouched) validatePhone(it)
+                        }
+                    },
+                    modifier      = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { 
+                            if (!it.isFocused && (phoneTouched || phone.isNotEmpty())) {
+                                phoneTouched = true
+                                validatePhone(phone)
+                            }
+                        },
+                    label         = { Text("Nomor HP*") },
+                    leadingIcon   = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    colors        = fieldColors,
+                    singleLine    = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) }),
+                    isError = phoneTouched && phoneError != null,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                if (phoneTouched && phoneError != null) {
+                    Text(
+                        text = phoneError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                    )
+                }
+            }
+
+            Column {
+                TextField(
+                    value         = shippingAddress,
+                    onValueChange = { 
+                        shippingAddress = it
+                        if (addressTouched) validateAddress(it)
+                    },
+                    modifier      = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 80.dp)
+                        .onFocusChanged { 
+                            if (!it.isFocused && (addressTouched || shippingAddress.isNotEmpty())) {
+                                addressTouched = true
+                                validateAddress(shippingAddress)
+                            }
+                        },
+                    label         = { Text("Alamat Lengkap*") },
+                    leadingIcon   = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    colors        = fieldColors,
+                    maxLines      = 3,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusMgr.clearFocus() }),
+                    isError = addressTouched && addressError != null,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                if (addressTouched && addressError != null) {
+                    Text(
+                        text = addressError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                    )
+                }
+            }
+
+            Text("PILIH KURIR", fontWeight = FontWeight.Black, fontSize = 16.sp, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onBackground)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                couriers.forEach { courier ->
+                    val selected = selectedCourier == courier
+                    Surface(
+                        modifier = Modifier.weight(1f).clickable { selectedCourier = courier },
+                        color    = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape    = RoundedCornerShape(12.dp),
+                        border   = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    ) {
+                        Box(modifier = Modifier.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+                            Text(courier.uppercase(), color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = 13.sp, letterSpacing = 0.5.sp)
+                        }
+                    }
+                }
+            }
+
+            Text("METODE PEMBAYARAN", fontWeight = FontWeight.Black, fontSize = 16.sp, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onBackground)
+            paymentMethods.forEach { method ->
+                val selected = selectedPayment == method
+                Surface(
+                    modifier = Modifier.fillMaxWidth().clickable { selectedPayment = method },
+                    color    = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape    = RoundedCornerShape(12.dp),
+                    border   = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.onPrimary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(method.uppercase(), color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = 13.sp, letterSpacing = 0.5.sp)
+                    }
+                }
+            }
+
+            if (errorMsg != null) {
+                Text(errorMsg, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(0.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         modifier              = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        Text("Total Pembayaran", color = Color.Gray, fontSize = 13.sp)
-                        Text(Formatter.formatRupiah(grandTotal), fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Text("TOTAL PEMBAYARAN", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
+                        Text(Formatter.formatRupiah(grandTotal), fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick  = {
                             focusMgr.clearFocus()
 
-                            if (recipientName.isBlank() || shippingAddress.isBlank() || phone.isBlank()) {
+                            validateName(recipientName)
+                            validatePhone(phone)
+                            validateAddress(shippingAddress)
+
+                            nameTouched = true
+                            phoneTouched = true
+                            addressTouched = true
+
+                            if (nameError != null || phoneError != null || addressError != null) {
                                 return@Button
                             }
                             
@@ -147,185 +425,24 @@ fun CheckoutScreen(
                                 )
                             }
                         },
-                        enabled  = !isLoading && recipientName.isNotBlank() && shippingAddress.isNotBlank() && phone.isNotBlank() && phone.length >= 11,
+                        enabled  = !isLoading,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors   = ButtonDefaults.buttonColors(
-                            containerColor         = Color.Black,
-                            disabledContainerColor = Color(0xFF444444)
+                            containerColor         = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.5.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(22.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.5.dp)
                         } else {
-                            Text("BUAT PESANAN", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                        }
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-
-            Card(
-                colors    = CardDefaults.cardColors(containerColor = Color.White),
-                shape     = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(1.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Ringkasan Pesanan", fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.5.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    items.forEach { item ->
-                        Row(
-                            modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text     = "${item.product.name} (${item.variant.size?.name ?: "-"}) ×${item.quantity}",
-                                fontSize = 13.sp,
-                                color    = Color.DarkGray,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text       = Formatter.formatRupiah(item.subtotal),
-                                fontSize   = 13.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
-                    
-                    Row(
-                        modifier              = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Ongkos Kirim ($selectedCourier)", fontSize = 13.sp, color = Color.Gray)
-                        Text(Formatter.formatRupiah(shippingFee), fontSize = 13.sp)
-                    }
-                    Row(
-                        modifier              = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Biaya Admin", fontSize = 13.sp, color = Color.Gray)
-                        Text(Formatter.formatRupiah(adminFee), fontSize = 13.sp)
-                    }
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
-                    
-                    Row(
-                        modifier              = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Total Pesanan", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text(Formatter.formatRupiah(grandTotal), fontWeight = FontWeight.Black, fontSize = 14.sp)
-                    }
-                }
-            }
-
-            Text("Data Pengiriman", fontWeight = FontWeight.Black, fontSize = 16.sp)
-
-            val fieldColors = TextFieldDefaults.colors(
-                focusedContainerColor     = Color.White,
-                unfocusedContainerColor   = Color.White,
-                focusedIndicatorColor     = Color.Black,
-                unfocusedIndicatorColor   = Color(0xFFDDDDDD),
-                cursorColor               = Color.Black,
-                focusedTextColor          = Color.Black,
-                unfocusedTextColor        = Color.Black
-            )
-
-            TextField(
-                value         = recipientName,
-                onValueChange = { recipientName = it },
-                modifier      = Modifier.fillMaxWidth(),
-                label         = { Text("Nama Penerima*") },
-                leadingIcon   = { Icon(Icons.Default.Person, null, modifier = Modifier.size(20.dp)) },
-                colors        = fieldColors,
-                singleLine    = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-            )
-
-            Column {
-                TextField(
-                    value         = phone,
-                    onValueChange = { phone = it },
-                    modifier      = Modifier.fillMaxWidth(),
-                    label         = { Text("Nomor HP*") },
-                    leadingIcon   = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp)) },
-                    colors        = fieldColors,
-                    singleLine    = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-                )
-                if (phone.isNotEmpty() && phone.length < 11) {
-                    Text(
-                        text = "Nomor HP minimal 11 angka",
-                        color = Color.Red,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-                    )
-                }
-            }
-
-            TextField(
-                value         = shippingAddress,
-                onValueChange = { shippingAddress = it },
-                modifier      = Modifier.fillMaxWidth().heightIn(min = 80.dp),
-                label         = { Text("Alamat Lengkap*") },
-                leadingIcon   = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(20.dp)) },
-                colors        = fieldColors,
-                maxLines      = 3,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { focusMgr.moveFocus(FocusDirection.Down) })
-            )
-
-            Text("Pilih Kurir", fontWeight = FontWeight.Black, fontSize = 16.sp)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                couriers.forEach { courier ->
-                    val selected = selectedCourier == courier
-                    Surface(
-                        modifier = Modifier.weight(1f).clickable { selectedCourier = courier },
-                        color    = if (selected) Color.Black else Color.White,
-                        shape    = RoundedCornerShape(12.dp),
-                        border   = if (selected) null else BorderStroke(1.dp, Color(0xFFDDDDDD))
-                    ) {
-                        Box(modifier = Modifier.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                            Text(courier, color = if (selected) Color.White else Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("BUAT PESANAN", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.5.sp)
                         }
                     }
                 }
             }
 
-            Text("Metode Pembayaran", fontWeight = FontWeight.Black, fontSize = 16.sp)
-            paymentMethods.forEach { method ->
-                val selected = selectedPayment == method
-                Surface(
-                    modifier = Modifier.fillMaxWidth().clickable { selectedPayment = method },
-                    color    = if (selected) Color.Black else Color.White,
-                    shape    = RoundedCornerShape(12.dp),
-                    border   = if (selected) null else BorderStroke(1.dp, Color(0xFFDDDDDD))
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = Color.White, unselectedColor = Color.Gray))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(method, color = if (selected) Color.White else Color.Black, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
-
-            if (errorMsg != null) {
-                Text(errorMsg, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
-            }
-
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

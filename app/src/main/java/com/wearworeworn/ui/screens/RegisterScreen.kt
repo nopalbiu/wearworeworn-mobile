@@ -57,9 +57,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(Color(0xFF0A0A0A), Color(0xFF1A1A1A)))
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -71,54 +69,53 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Back button ───────────────────────────────────────────────────
             IconButton(onClick = onNavigateToLogin) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Kembali",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Header ────────────────────────────────────────────────────────
             Text(
-                text       = "Buat Akun Baru",
-                fontSize   = 28.sp,
+                text       = "JOIN THE CLUB",
+                fontSize   = 24.sp,
                 fontWeight = FontWeight.Black,
-                color      = Color.White
+                color      = MaterialTheme.colorScheme.onBackground,
+                letterSpacing = 1.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text     = "Daftarkan diri dan mulai berbelanja",
-                fontSize = 14.sp,
-                color    = Color(0xFF888888)
+                text     = "CREATE AN ACCOUNT TO START YOUR JOURNEY",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 0.5.sp
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // ── Fields ────────────────────────────────────────────────────────
             val fieldColors = TextFieldDefaults.colors(
-                focusedContainerColor   = Color(0xFF2A2A2A),
-                unfocusedContainerColor = Color(0xFF222222),
-                focusedTextColor        = Color.White,
-                unfocusedTextColor      = Color.White,
+                focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                focusedTextColor        = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor      = MaterialTheme.colorScheme.onSurface,
                 focusedIndicatorColor   = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                cursorColor             = Color.White,
-                focusedPlaceholderColor   = Color(0xFF666666),
-                unfocusedPlaceholderColor = Color(0xFF666666)
+                cursorColor             = MaterialTheme.colorScheme.primary,
+                focusedPlaceholderColor   = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
-            val fieldShape = RoundedCornerShape(16.dp)
+            val fieldShape = RoundedCornerShape(12.dp)
 
-            // Nama
             TextField(
                 value         = name,
                 onValueChange = { name = it; viewModel.clearError() },
                 modifier      = Modifier.fillMaxWidth().height(58.dp),
                 placeholder   = { Text("Nama Lengkap", fontSize = 14.sp) },
-                leadingIcon   = { Icon(Icons.Default.Person, null, tint = Color(0xFF666666), modifier = Modifier.size(20.dp)) },
+                leadingIcon   = { Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) },
                 colors        = fieldColors,
                 shape         = fieldShape,
                 singleLine    = true,
@@ -128,13 +125,12 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Email
             TextField(
                 value         = email,
                 onValueChange = { email = it; viewModel.clearError() },
                 modifier      = Modifier.fillMaxWidth().height(58.dp),
                 placeholder   = { Text("Email", fontSize = 14.sp) },
-                leadingIcon   = { Icon(Icons.Default.Email, null, tint = Color(0xFF666666), modifier = Modifier.size(20.dp)) },
+                leadingIcon   = { Icon(Icons.Default.Email, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) },
                 colors        = fieldColors,
                 shape         = fieldShape,
                 singleLine    = true,
@@ -144,18 +140,17 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Password
             TextField(
                 value         = password,
                 onValueChange = { password = it; viewModel.clearError() },
                 modifier      = Modifier.fillMaxWidth().height(58.dp),
                 placeholder   = { Text("Password (min. 8 karakter)", fontSize = 14.sp) },
-                leadingIcon   = { Icon(Icons.Default.Lock, null, tint = Color(0xFF666666), modifier = Modifier.size(20.dp)) },
+                leadingIcon   = { Icon(Icons.Default.Lock, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) },
                 trailingIcon  = {
                     IconButton(onClick = { passVisible = !passVisible }) {
                         Icon(
                             if (passVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            null, tint = Color(0xFF666666), modifier = Modifier.size(20.dp)
+                            null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)
                         )
                     }
                 },
@@ -169,18 +164,17 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Konfirmasi Password
             TextField(
                 value         = passwordConfirm,
                 onValueChange = { passwordConfirm = it; viewModel.clearError() },
                 modifier      = Modifier.fillMaxWidth().height(58.dp),
                 placeholder   = { Text("Konfirmasi Password", fontSize = 14.sp) },
-                leadingIcon   = { Icon(Icons.Default.Lock, null, tint = Color(0xFF666666), modifier = Modifier.size(20.dp)) },
+                leadingIcon   = { Icon(Icons.Default.Lock, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) },
                 trailingIcon  = {
                     IconButton(onClick = { passConfVisible = !passConfVisible }) {
                         Icon(
                             if (passConfVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            null, tint = Color(0xFF666666), modifier = Modifier.size(20.dp)
+                            null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)
                         )
                     }
                 },
@@ -195,12 +189,11 @@ fun RegisterScreen(
                 })
             )
 
-            // Error
             Spacer(modifier = Modifier.height(8.dp))
             AnimatedVisibility(visible = errorMessage != null, enter = fadeIn(), exit = fadeOut()) {
                 Text(
                     text      = errorMessage ?: "",
-                    color     = Color(0xFFFF6B6B),
+                    color     = MaterialTheme.colorScheme.error,
                     fontSize  = 13.sp,
                     textAlign = TextAlign.Center,
                     modifier  = Modifier.fillMaxWidth()
@@ -209,7 +202,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Register Button ───────────────────────────────────────────────
             Button(
                 onClick  = {
                     focusManager.clearFocus()
@@ -218,29 +210,28 @@ fun RegisterScreen(
                 enabled  = !isLoading,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors   = ButtonDefaults.buttonColors(
-                    containerColor         = Color.White,
-                    disabledContainerColor = Color(0xFF444444)
+                    containerColor         = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.Black, strokeWidth = 2.5.dp)
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.5.dp)
                 } else {
-                    Text("DAFTAR", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp, letterSpacing = 1.5.sp)
+                    Text("DAFTAR", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp, letterSpacing = 1.5.sp)
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Link ke Login ─────────────────────────────────────────────────
             Row(
                 modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment     = Alignment.CenterVertically
             ) {
-                Text("Sudah punya akun? ", color = Color(0xFF666666), fontSize = 13.sp)
+                Text("ALREADY A MEMBER? ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 TextButton(onClick = onNavigateToLogin, contentPadding = PaddingValues(0.dp)) {
-                    Text("Masuk", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("LOGIN", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
                 }
             }
 
