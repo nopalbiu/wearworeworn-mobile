@@ -66,6 +66,7 @@ fun CheckoutSuccessScreen(
     orderId:        Int,
     totalPrice:     Double,
     createdAt:      String? = null,
+    paymentMethod:  String? = "",
     isFromMyOrders: Boolean = false,
     onBack:         () -> Unit
 ) {
@@ -90,9 +91,21 @@ fun CheckoutSuccessScreen(
     val seconds = remainingSeconds % 60
     val timerText = String.format("%02d:%02d:%02d", hours, minutes, seconds)
 
-    val accountNumber = "1234567890"
+    val bankName = when {
+        paymentMethod?.contains("BCA", true) == true -> "BCA"
+        paymentMethod?.contains("BRI", true) == true -> "BRI"
+        paymentMethod?.contains("Mandiri", true) == true -> "MANDIRI"
+        else -> "BCA"
+    }
+
+    val accountNumber = when (bankName) {
+        "BCA"     -> "1234567890"
+        "BRI"     -> "0987654321"
+        "MANDIRI" -> "1122334455"
+        else      -> "1234567890"
+    }
+    
     val accountHolder = "WearWoreWorn Store"
-    val bankName = "BCA"
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,

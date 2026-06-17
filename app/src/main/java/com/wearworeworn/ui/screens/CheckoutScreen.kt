@@ -100,7 +100,11 @@ fun CheckoutScreen(
 
     val grandTotal = total + shippingFee + adminFee
 
-    val paymentMethods = listOf("Transfer Bank (Manual)")
+    val paymentMethods = listOf(
+        "Transfer Bank BCA",
+        "Transfer Bank BRI",
+        "Transfer Bank Mandiri"
+    )
     var selectedPayment by remember { mutableStateOf(paymentMethods[0]) }
 
     LaunchedEffect(Unit) { orderViewModel.resetState() }

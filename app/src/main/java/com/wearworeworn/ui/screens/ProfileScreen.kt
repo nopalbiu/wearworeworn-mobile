@@ -3,9 +3,11 @@ package com.wearworeworn.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -14,9 +16,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -38,6 +41,7 @@ fun ProfileScreen(
 
     val initials = user?.name
         ?.split(" ")
+        ?.filter { it.isNotEmpty() }
         ?.take(2)
         ?.joinToString("") { it.first().uppercase() }
         ?: "?"
@@ -45,26 +49,27 @@ fun ProfileScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title            = { Text("Keluar?", fontWeight = FontWeight.Bold) },
-            text             = { Text("Kamu akan keluar dari akun ini.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            title            = { Text("Log Out?", fontWeight = FontWeight.Black, letterSpacing = 1.sp) },
+            text             = { Text("Are you sure you want to log out from your account?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
                         showLogoutDialog = false
                         viewModel.logout { onLogout() }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Keluar", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("LOG OUT", fontWeight = FontWeight.Black, color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("CANCEL", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape          = RoundedCornerShape(12.dp)
+            shape          = RoundedCornerShape(20.dp)
         )
     }
 
@@ -75,119 +80,252 @@ fun ProfileScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .statusBarsPadding()
-                .padding(bottom = 64.dp)
-        ) {
-            IconButton(
-                onClick  = onBack,
-                modifier = Modifier.padding(8.dp).align(Alignment.TopStart)
+    Scaffold(
+        topBar = {
+            Surface(
+                modifier = Modifier.statusBarsPadding(),
+                color = MaterialTheme.colorScheme.background
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = MaterialTheme.colorScheme.onSurface)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                    Text(
+                        "MY PROFILE",
+                        modifier = Modifier.padding(start = 8.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape),
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                initials,
+                                fontSize = 40.sp,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        user?.name?.uppercase() ?: "GUEST USER",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
 
             Column(
-                modifier            = Modifier.fillMaxWidth().padding(top = 56.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
-                    modifier         = Modifier.size(90.dp).background(MaterialTheme.colorScheme.onSurface, CircleShape),
-                    contentAlignment = Alignment.Center
+                Text(
+                    "ACCOUNT DETAILS",
+                    modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp
+                )
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(initials, fontSize = 32.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.surface)
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        InfoRow(label = "FULL NAME", value = user?.name ?: "-")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                        InfoRow(label = "EMAIL ADDRESS", value = user?.email ?: "-")
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    "SETTINGS",
+                    modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp
+                )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.ShoppingBag,
+                    title = "My Orders",
+                    subtitle = "History and transaction status",
+                    onClick = onNavigateToOrders
+                )
+
+                ProfileMenuItem(
+                    icon = Icons.Default.Lock,
+                    title = "Change Password",
+                    subtitle = "Update your security credentials",
+                    onClick = { showPasswordDialog = true }
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(user?.name ?: "-", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(user?.email ?: "-", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLogoutDialog = true },
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            "LOG OUT",
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.error,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
             }
+            
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Text(
+                "WEARWOREWORN v1.0.0",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.outline,
+                letterSpacing = 2.sp
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .offset(y = (-20).dp)
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Column {
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 0.5.sp
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun ProfileMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() },
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Card(
-                colors    = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                shape     = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(0.dp)
+            Surface(
+                modifier = Modifier.size(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface
             ) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    ProfileInfoRow(icon = Icons.Default.Person, label = "Nama",  value = user?.name  ?: "-")
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 16.dp))
-                    ProfileInfoRow(icon = Icons.Default.Email,  label = "Email", value = user?.email ?: "-")
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                modifier  = Modifier.fillMaxWidth().clickable { onNavigateToOrders() },
-                colors    = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                shape     = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(0.dp)
-            ) {
-                Row(
-                    modifier          = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Text("My Orders", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-                }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title.uppercase(),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 14.sp,
+                    letterSpacing = 0.5.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    subtitle,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                modifier  = Modifier.fillMaxWidth().clickable { showPasswordDialog = true },
-                colors    = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                shape     = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(0.dp)
-            ) {
-                Row(
-                    modifier          = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Text("Ubah Password", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick   = { showLogoutDialog = true },
-                modifier  = Modifier.fillMaxWidth().height(56.dp),
-                colors    = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)
-                ),
-                shape     = RoundedCornerShape(12.dp),
-                elevation = ButtonDefaults.buttonElevation(0.dp)
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                Spacer(modifier = Modifier.width(10.dp))
-                Text("Keluar dari Akun", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            }
+            
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -210,40 +348,49 @@ private fun ChangePasswordDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape     = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
+            shape     = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(12.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Ubah Password", fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    "CHANGE PASSWORD",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                PasswordField(label = "Password Saat Ini", value = currentPwd, onValueChange = { currentPwd = it }, showPassword = showCurrent, onToggleShow = { showCurrent = !showCurrent })
-                Spacer(modifier = Modifier.height(12.dp))
-                PasswordField(label = "Password Baru",     value = newPwd,     onValueChange = { newPwd     = it }, showPassword = showNew,     onToggleShow = { showNew     = !showNew     })
-                Spacer(modifier = Modifier.height(12.dp))
-                PasswordField(label = "Konfirmasi Password Baru", value = confirmPwd, onValueChange = { confirmPwd = it }, showPassword = showConfirm, onToggleShow = { showConfirm = !showConfirm })
+                PasswordField(label = "CURRENT PASSWORD", value = currentPwd, onValueChange = { currentPwd = it }, showPassword = showCurrent, onToggleShow = { showCurrent = !showCurrent })
+                Spacer(modifier = Modifier.height(16.dp))
+                PasswordField(label = "NEW PASSWORD",     value = newPwd,     onValueChange = { newPwd     = it }, showPassword = showNew,     onToggleShow = { showNew     = !showNew     })
+                Spacer(modifier = Modifier.height(16.dp))
+                PasswordField(label = "CONFIRM NEW PASSWORD", value = confirmPwd, onValueChange = { confirmPwd = it }, showPassword = showConfirm, onToggleShow = { showConfirm = !showConfirm })
 
                 if (errorMsg != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(errorMsg!!, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp)) {
+                        Text(errorMsg!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.padding(8.dp), fontWeight = FontWeight.Bold)
+                    }
                 }
                 if (successMsg != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(successMsg!!, color = Color(0xFF81C784), fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(color = Color(0xFF81C784).copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp)) {
+                        Text(successMsg!!, color = Color(0xFF43A047), fontSize = 12.sp, modifier = Modifier.padding(8.dp), fontWeight = FontWeight.Bold)
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
                         onClick  = onDismiss,
-                        modifier = Modifier.weight(1f).height(48.dp),
+                        modifier = Modifier.weight(1f).height(52.dp),
                         shape    = RoundedCornerShape(12.dp),
-                        colors   = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-                        border   = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline)
                     ) {
-                        Text("Batal")
+                        Text("CANCEL", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
                     }
                     Button(
                         onClick  = {
@@ -252,21 +399,21 @@ private fun ChangePasswordDialog(
                             viewModel.changePassword(
                                 currentPwd, newPwd, confirmPwd,
                                 onSuccess = {
-                                    successMsg = "Password berhasil diubah!"
+                                    successMsg = "Password successfully changed!"
                                     currentPwd = ""; newPwd = ""; confirmPwd = ""
                                 },
                                 onError = { errorMsg = it }
                             )
                         },
-                        modifier = Modifier.weight(1f).height(48.dp),
+                        modifier = Modifier.weight(1f).height(52.dp),
                         colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape    = RoundedCornerShape(12.dp),
                         enabled  = !isLoading
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp), strokeWidth = 3.dp)
                         } else {
-                            Text("Simpan", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                            Text("SAVE", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black)
                         }
                     }
                 }
@@ -283,8 +430,8 @@ private fun PasswordField(
     showPassword:  Boolean,
     onToggleShow:  () -> Unit
 ) {
-    Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
-    Spacer(modifier = Modifier.height(6.dp))
+    Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Black, letterSpacing = 0.5.sp)
+    Spacer(modifier = Modifier.height(8.dp))
     TextField(
         value                = value,
         onValueChange        = onValueChange,
@@ -302,8 +449,8 @@ private fun PasswordField(
             }
         },
         colors = TextFieldDefaults.colors(
-            focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
             focusedIndicatorColor   = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             cursorColor             = MaterialTheme.colorScheme.primary,
@@ -312,24 +459,4 @@ private fun PasswordField(
         ),
         shape = RoundedCornerShape(12.dp)
     )
-}
-
-@Composable
-private fun ProfileInfoRow(
-    icon:  androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier          = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(14.dp))
-        Column {
-            Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-        }
-    }
 }

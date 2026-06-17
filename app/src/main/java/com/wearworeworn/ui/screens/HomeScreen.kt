@@ -4,11 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -58,6 +61,7 @@ fun HomeScreen(
     var showSortMenu    by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
     val sheetState      = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val gridState       = rememberLazyGridState()
 
     val sortOptions = listOf("Terbaru", "Harga: Termurah", "Harga: Termahal")
 
@@ -201,13 +205,15 @@ fun HomeScreen(
     ) { innerPadding ->
         LazyVerticalGrid(
             columns               = GridCells.Fixed(2),
+            state                 = gridState,
             modifier              = Modifier.fillMaxSize().padding(horizontal = 12.dp).clickable { focusManager.clearFocus() },
             contentPadding        = PaddingValues(
                 top    = innerPadding.calculateTopPadding() + 8.dp,
                 bottom = innerPadding.calculateBottomPadding() + 80.dp
             ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement   = Arrangement.spacedBy(12.dp)
+            verticalArrangement   = Arrangement.spacedBy(12.dp),
+            flingBehavior         = ScrollableDefaults.flingBehavior()
         ) {
             if (viewModel.searchQuery.value.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {

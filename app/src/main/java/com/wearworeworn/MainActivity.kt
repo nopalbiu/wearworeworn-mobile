@@ -14,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.compose.NavHost
+import androidx.navigation.NavType
 import com.wearworeworn.model.Order
 import com.wearworeworn.ui.screens.*
 import com.wearworeworn.viewmodel.AuthViewModel
@@ -66,7 +68,19 @@ fun AppNavigation() {
 
     NavHost(
         navController    = navController,
-        startDestination = "home"
+        startDestination = "home",
+        enterTransition  = {
+            slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        },
+        exitTransition   = {
+            slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+        },
+        popEnterTransition = {
+            slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        },
+        popExitTransition = {
+            slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+        }
     ) {
 
         composable("home") {
@@ -137,7 +151,8 @@ fun AppNavigation() {
                 onBack         = { navController.popBackStack() },
                 onOrderSuccess = { order ->
                     val encodedCreatedAt = java.net.URLEncoder.encode(order.createdAt ?: "", "UTF-8")
-                    navController.navigate("checkoutSuccess/${order.id}/${order.totalPrice}?createdAt=$encodedCreatedAt") {
+                    val encodedPayment = java.net.URLEncoder.encode(order.paymentMethod ?: "", "UTF-8")
+                    navController.navigate("checkoutSuccess/${order.id}/${order.totalPrice}?createdAt=$encodedCreatedAt&paymentMethod=$encodedPayment") {
                         popUpTo("cart") { inclusive = true }
                     }
                 }
@@ -145,12 +160,13 @@ fun AppNavigation() {
         }
 
         composable(
-            route     = "checkoutSuccess/{orderId}/{totalPrice}?isFromMyOrders={isFromMyOrders}&createdAt={createdAt}",
+            route     = "checkoutSuccess/{orderId}/{totalPrice}?isFromMyOrders={isFromMyOrders}&createdAt={createdAt}&paymentMethod={paymentMethod}",
             arguments = listOf(
                 navArgument("orderId")    { type = NavType.IntType },
                 navArgument("totalPrice") { type = NavType.StringType },
                 navArgument("isFromMyOrders") { type = NavType.BoolType; defaultValue = false },
-                navArgument("createdAt") { type = NavType.StringType; defaultValue = "" }
+                navArgument("createdAt") { type = NavType.StringType; defaultValue = "" },
+                navArgument("paymentMethod") { type = NavType.StringType; defaultValue = "" }
             )
         ) { backStackEntry ->
             val orderId    = backStackEntry.arguments?.getInt("orderId") ?: 0
@@ -159,10 +175,15 @@ fun AppNavigation() {
             val createdAt = try {
                 java.net.URLDecoder.decode(backStackEntry.arguments?.getString("createdAt") ?: "", "UTF-8")
             } catch (_: Exception) { "" }
+            val paymentMethod = try {
+                java.net.URLDecoder.decode(backStackEntry.arguments?.getString("paymentMethod") ?: "", "UTF-8")
+            } catch (_: Exception) { "" }
+            
             CheckoutSuccessScreen(
                 orderId        = orderId,
                 totalPrice     = totalPrice,
                 createdAt      = createdAt.ifBlank { null },
+                paymentMethod  = paymentMethod,
                 isFromMyOrders = isFromMyOrders,
                 onBack         = {
                     if (isFromMyOrders) {
@@ -201,7 +222,8 @@ fun AppNavigation() {
                 },
                 onPendingPayment = { order ->
                     val encodedCreatedAt = java.net.URLEncoder.encode(order.createdAt ?: "", "UTF-8")
-                    navController.navigate("checkoutSuccess/${order.id}/${order.totalPrice}?isFromMyOrders=true&createdAt=$encodedCreatedAt")
+                    val encodedPayment = java.net.URLEncoder.encode(order.paymentMethod ?: "", "UTF-8")
+                    navController.navigate("checkoutSuccess/${order.id}/${order.totalPrice}?isFromMyOrders=true&createdAt=$encodedCreatedAt&paymentMethod=$encodedPayment")
                 },
                 onPaymentDetail = { order ->
                     selectedOrder.value = order
