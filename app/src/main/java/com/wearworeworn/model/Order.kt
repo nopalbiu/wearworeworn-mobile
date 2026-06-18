@@ -12,10 +12,11 @@ data class OrderRequest(
 )
 
 data class Order(
-    @SerializedName("id_order")    val id:         Int,
-    @SerializedName("total_harga") val totalPrice: Double,
-    @SerializedName("status")      val status:     String,
-    @SerializedName("created_at")  val createdAt:  String? = ""
+    @SerializedName("id_order")    val id:            Int,
+    @SerializedName("total_harga") val totalPrice:    Double,
+    @SerializedName("status")      val status:        String,
+    @SerializedName("created_at")  val createdAt:     String? = "",
+    @SerializedName("metode_pembayaran") val paymentMethod: String? = ""
 )
 
 data class OrderResponse(
