@@ -39,12 +39,30 @@ fun CartScreen(
     val items     = viewModel.cartItems.value
     val isLoading = viewModel.isLoading.value
     val total     = viewModel.totalPrice
+    val errorMsg  = viewModel.errorMessage.value
+    val successMsg = viewModel.successMessage.value
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.loadCart() }
+
+    LaunchedEffect(errorMsg) {
+        if (errorMsg != null) {
+            snackbarHostState.showSnackbar(errorMsg)
+            viewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(successMsg) {
+        if (successMsg != null) {
+            snackbarHostState.showSnackbar(successMsg)
+            viewModel.clearMessages()
+        }
+    }
 
     Scaffold(
         modifier       = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost   = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 modifier        = Modifier.statusBarsPadding(),
@@ -254,16 +272,35 @@ private fun CartItemRow(
                         color      = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     IconButton(
-                        onClick  = { onUpdateQuantity(cartItem.quantity + 1) },
+                        onClick  = { 
+                            if (cartItem.quantity < cartItem.variant.stock) {
+                                onUpdateQuantity(cartItem.quantity + 1)
+                            }
+                        },
+                        enabled  = cartItem.quantity < cartItem.variant.stock,
                         modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(
+                            Icons.Default.Add, 
+                            contentDescription = "Tambah", 
+                            modifier = Modifier.size(18.dp), 
+                            tint = if (cartItem.quantity < cartItem.variant.stock) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        )
                     }
                 }
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color(0xFFCC3333), modifier = Modifier.size(22.dp))
             }
+        }
+        if (cartItem.quantity >= cartItem.variant.stock) {
+            Text(
+                text = "Mencapai batas stok tersedia",
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 116.dp, bottom = 12.dp),
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

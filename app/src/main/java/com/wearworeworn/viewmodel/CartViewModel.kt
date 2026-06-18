@@ -57,8 +57,19 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         
         if (existingIndex != -1) {
             val item = currentItems[existingIndex]
-            currentItems[existingIndex] = item.copy(quantity = item.quantity + quantity)
+            val newTotal = item.quantity + quantity
+            if (newTotal > variant.stock) {
+                _errorMessage.value = "Gagal: Total di keranjang melebihi stok (Maks: ${variant.stock})"
+                onError()
+                return
+            }
+            currentItems[existingIndex] = item.copy(quantity = newTotal)
         } else {
+            if (quantity > variant.stock) {
+                _errorMessage.value = "Gagal: Jumlah melebihi stok yang tersedia"
+                onError()
+                return
+            }
             currentItems.add(CartItem(
                 id = -(100..9999).random(),
                 product = product,
@@ -83,6 +94,14 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateQuantity(cartItemId: Int, newQuantity: Int) {
         if (newQuantity < 1) return
+        
+        val item = _cartItems.value.find { it.id == cartItemId } ?: return
+        
+        // Cek Stok
+        if (newQuantity > item.variant.stock) {
+            _errorMessage.value = "Stok tidak mencukupi (Maks: ${item.variant.stock})"
+            return
+        }
         
         _cartItems.value = _cartItems.value.map {
             if (it.id == cartItemId) it.copy(quantity = newQuantity) else it
