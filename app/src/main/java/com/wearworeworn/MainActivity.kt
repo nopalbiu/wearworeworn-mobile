@@ -63,6 +63,8 @@ fun AppNavigation() {
     LaunchedEffect(authViewModel.isLoggedIn.value) {
         if (authViewModel.isLoggedIn.value) {
             cartViewModel.loadCart()
+        } else {
+            cartViewModel.clearLocalCart()
         }
     }
 

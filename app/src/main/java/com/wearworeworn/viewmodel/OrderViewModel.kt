@@ -74,9 +74,15 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 _orderSuccess.value = response.order
                 onSuccess(response.order)
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("ORDER", "HTTP Error: $errorBody")
+                val msg = "Gagal: ${e.message()} (Code: ${e.code()})"
+                _errorMessage.value = msg
+                onError(msg)
             } catch (e: Exception) {
                 Log.e("ORDER", "Create error: ${e.message}")
-                val msg = "Gagal membuat pesanan. Silakan coba lagi."
+                val msg = "Gagal membuat pesanan: ${e.localizedMessage}"
                 _errorMessage.value = msg
                 onError(msg)
             } finally {
@@ -129,9 +135,15 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 _orderSuccess.value = response.order
                 onSuccess(response.order)
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("ORDER", "Direct buy HTTP error: $errorBody")
+                val msg = "Gagal: ${e.message()} (Code: ${e.code()})"
+                _errorMessage.value = msg
+                onError(msg)
             } catch (e: Exception) {
                 Log.e("ORDER", "Direct buy error: ${e.message}")
-                val msg = "Gagal membuat pesanan. Silakan coba lagi."
+                val msg = "Gagal membuat pesanan: ${e.localizedMessage}"
                 _errorMessage.value = msg
                 onError(msg)
             } finally {
